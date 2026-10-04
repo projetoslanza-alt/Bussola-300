@@ -1,0 +1,40 @@
+﻿# Dependências
+node_modules/
+
+# Segredos
+.env
+.env.*
+!.env.example
+
+# Logs
+logs/
+*.log
+
+# Banco / dados locais
+data/
+pgdata/
+.postgres/
+backups/
+uploads/
+
+# Dados reais da empresa
+*.xlsx
+*.xls
+*.csv
+
+# Build / cobertura
+dist/
+coverage/
+.tmp/
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# IDE
+.vscode/
+
+# Arquivos temporários de inspeção
+scripts/_catalog.txt
+scripts/_inspect_out.json
+scripts/_terms.txt

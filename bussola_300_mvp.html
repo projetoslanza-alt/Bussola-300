@@ -1,0 +1,1513 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bússola 300 — 300 Franchising</title>
+  <meta name="description" content="Protótipo navegável do Bússola 300 — gestão, pessoas, conhecimento, metas, chamados e materiais." />
+  <style>
+    :root{
+      --bg:#080808;
+      --panel:#111111;
+      --panel-2:#171717;
+      --panel-3:#1f1f1f;
+      --line:#2b2b2b;
+      --text:#f7f7f7;
+      --muted:#a7a7a7;
+      --red:#e10600;
+      --red-2:#ff2a23;
+      --red-dark:#8f0805;
+      --white:#ffffff;
+      --success:#30c27a;
+      --warning:#f2b84b;
+      --danger:#ff5b5b;
+      --shadow:0 18px 60px rgba(0,0,0,.35);
+      --radius:20px;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 80% -10%, rgba(225,6,0,.15), transparent 32%),
+        linear-gradient(180deg,#090909,#070707 52%,#0b0b0b);
+      color:var(--text);
+      min-height:100vh;
+    }
+    button,input,select,textarea{font:inherit}
+    button{cursor:pointer}
+    a{color:inherit;text-decoration:none}
+    .app{display:grid;grid-template-columns:280px 1fr;min-height:100vh}
+    .sidebar{
+      position:sticky;top:0;height:100vh;padding:22px 18px;border-right:1px solid var(--line);
+      background:rgba(7,7,7,.96);backdrop-filter:blur(20px);z-index:20;overflow:auto
+    }
+    .brand{display:flex;align-items:center;gap:12px;padding:8px 10px 22px}
+    .brand-mark{
+      width:42px;height:42px;border-radius:14px;background:linear-gradient(145deg,var(--red-2),var(--red-dark));
+      display:grid;place-items:center;font-weight:900;font-size:15px;box-shadow:0 10px 28px rgba(225,6,0,.28)
+    }
+    .brand strong{font-size:16px;display:block;letter-spacing:.4px}
+    .brand span{color:var(--muted);font-size:12px}
+    .nav-group{margin:10px 0 18px}
+    .nav-label{font-size:11px;text-transform:uppercase;letter-spacing:1.35px;color:#6f6f6f;padding:0 12px 8px}
+    .nav-btn{
+      width:100%;border:0;background:transparent;color:#cacaca;border-radius:13px;padding:11px 12px;
+      display:flex;align-items:center;gap:12px;margin:3px 0;text-align:left;transition:.2s
+    }
+    .nav-btn:hover{background:#151515;color:#fff}
+    .nav-btn.active{background:linear-gradient(90deg,rgba(225,6,0,.20),rgba(225,6,0,.06));color:#fff;border:1px solid rgba(225,6,0,.22)}
+    .nav-icon{width:28px;height:28px;border-radius:9px;background:#202020;display:grid;place-items:center;font-size:13px}
+    .nav-btn.active .nav-icon{background:var(--red);box-shadow:0 6px 18px rgba(225,6,0,.28)}
+    .sidebar-footer{margin-top:20px;padding:14px;border:1px solid var(--line);border-radius:16px;background:#111}
+    .sidebar-footer small{color:var(--muted)}
+    .profile-mini{display:flex;gap:10px;align-items:center;margin-top:10px}
+    .avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(145deg,#f14c46,#8c0501);display:grid;place-items:center;font-weight:800}
+    .profile-mini strong{font-size:13px}.profile-mini span{font-size:11px;color:var(--muted)}
+    main{min-width:0}
+    .topbar{
+      height:74px;position:sticky;top:0;z-index:15;border-bottom:1px solid var(--line);
+      background:rgba(8,8,8,.78);backdrop-filter:blur(18px);display:flex;align-items:center;justify-content:space-between;padding:0 28px
+    }
+    .topbar-left{display:flex;align-items:center;gap:12px}
+    .menu-mobile{display:none;border:1px solid var(--line);background:#111;color:#fff;border-radius:11px;padding:8px 10px}
+    .breadcrumb{color:var(--muted);font-size:13px}.breadcrumb b{color:#fff}
+    .topbar-actions{display:flex;align-items:center;gap:10px}
+    .role-select{background:#111;border:1px solid var(--line);color:#ddd;border-radius:12px;padding:9px 11px}
+    .icon-btn{width:38px;height:38px;border-radius:12px;border:1px solid var(--line);background:#111;color:#fff;display:grid;place-items:center}
+    .content{padding:28px;max-width:1600px;margin:0 auto}
+    .page{display:none;animation:fade .25s ease}.page.active{display:block}
+    @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+    .hero{
+      position:relative;overflow:hidden;border:1px solid #2e1716;border-radius:26px;
+      padding:30px;background:
+      linear-gradient(110deg,rgba(225,6,0,.23),rgba(21,21,21,.92) 45%,rgba(13,13,13,.98));
+      box-shadow:var(--shadow)
+    }
+    .hero:after{content:"300";position:absolute;right:20px;top:-50px;font-size:190px;font-weight:950;color:rgba(255,255,255,.025);letter-spacing:-16px}
+    .eyebrow{font-size:12px;color:#ff8f8a;text-transform:uppercase;letter-spacing:1.5px;font-weight:800}
+    h1,h2,h3,p{margin-top:0}
+    h1{font-size:34px;line-height:1.1;margin:8px 0 11px;max-width:850px}
+    .hero p{color:#c6c6c6;max-width:780px;line-height:1.65;margin-bottom:20px}
+    .hero-actions,.actions{display:flex;gap:10px;flex-wrap:wrap}
+    .btn{
+      border:0;border-radius:12px;padding:10px 14px;font-weight:750;transition:.18s;display:inline-flex;align-items:center;justify-content:center;gap:8px
+    }
+    .btn-primary{background:var(--red);color:#fff;box-shadow:0 10px 24px rgba(225,6,0,.22)}
+    .btn-primary:hover{background:var(--red-2);transform:translateY(-1px)}
+    .btn-secondary{background:#1a1a1a;color:#f5f5f5;border:1px solid #333}
+    .btn-ghost{background:transparent;color:#c8c8c8;border:1px solid #333}
+    .btn-danger{background:#341111;color:#ff9895;border:1px solid #5c1b18}
+    .grid{display:grid;gap:16px}
+    .grid-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+    .grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .stats{margin-top:18px}
+    .card{
+      background:linear-gradient(180deg,#141414,#101010);border:1px solid var(--line);
+      border-radius:var(--radius);padding:18px;box-shadow:0 8px 30px rgba(0,0,0,.12)
+    }
+    .card h3{font-size:15px;margin-bottom:7px}
+    .card p{color:var(--muted);font-size:13px;line-height:1.55}
+    .stat-value{font-size:28px;font-weight:900;letter-spacing:-.8px;margin:4px 0}
+    .stat-meta{font-size:12px;color:var(--muted)}
+    .positive{color:var(--success)}.negative{color:var(--danger)}.warning{color:var(--warning)}
+    .section-head{display:flex;justify-content:space-between;align-items:end;gap:15px;margin:30px 0 14px}
+    .section-head h2{font-size:20px;margin:0}.section-head p{margin:4px 0 0;color:var(--muted);font-size:13px}
+    .module-card{position:relative;min-height:180px;overflow:hidden;transition:.22s}
+    .module-card:hover{transform:translateY(-3px);border-color:#4a2624}
+    .module-card .module-icon{width:44px;height:44px;border-radius:14px;background:rgba(225,6,0,.13);display:grid;place-items:center;margin-bottom:18px;font-weight:800;color:#ff7973}
+    .module-card .tag{position:absolute;top:16px;right:16px}
+    .tag,.pill{display:inline-flex;align-items:center;border-radius:999px;padding:5px 9px;font-size:11px;font-weight:800}
+    .tag{background:#202020;color:#bcbcbc;border:1px solid #303030}
+    .tag.red{background:rgba(225,6,0,.13);color:#ff8b86;border-color:rgba(225,6,0,.28)}
+    .tag.green{background:rgba(48,194,122,.12);color:#65daa0;border-color:rgba(48,194,122,.22)}
+    .module-link{font-size:12px;color:#ff7772;font-weight:800}
+    .list{display:flex;flex-direction:column;gap:10px}
+    .list-item{
+      display:flex;gap:12px;align-items:center;padding:13px;border:1px solid #282828;border-radius:14px;background:#111
+    }
+    .list-item .grow{flex:1;min-width:0}.list-item strong{display:block;font-size:13px}.list-item small{color:var(--muted)}
+    .dot{width:9px;height:9px;border-radius:50%;background:var(--red);flex:0 0 auto}
+    .progress{height:8px;background:#242424;border-radius:999px;overflow:hidden}.progress > span{display:block;height:100%;background:linear-gradient(90deg,var(--red-dark),var(--red-2));border-radius:999px}
+    .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+    .field, .search{
+      background:#101010;border:1px solid #2f2f2f;color:#f4f4f4;border-radius:12px;padding:10px 12px;outline:none
+    }
+    .search{min-width:240px}
+    .field:focus,.search:focus{border-color:#6c2522;box-shadow:0 0 0 3px rgba(225,6,0,.08)}
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    th{text-align:left;color:#8c8c8c;font-size:11px;text-transform:uppercase;letter-spacing:.8px;padding:12px;border-bottom:1px solid #2a2a2a}
+    td{padding:13px 12px;border-bottom:1px solid #232323;color:#d8d8d8}
+    tr:hover td{background:#141414}
+    .table-wrap{overflow:auto}
+    .status{display:inline-flex;align-items:center;gap:6px;padding:5px 8px;border-radius:999px;background:#202020;font-size:11px;font-weight:800}
+    .status:before{content:"";width:7px;height:7px;border-radius:50%;background:#888}
+    .status.ok:before{background:var(--success)}.status.warn:before{background:var(--warning)}.status.red:before{background:var(--red-2)}
+    .kanban{display:grid;grid-template-columns:repeat(4,minmax(260px,1fr));gap:14px;overflow:auto;padding-bottom:6px}
+    .kanban-col{background:#0f0f0f;border:1px solid #292929;border-radius:16px;padding:12px;min-height:300px}
+    .kanban-title{display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:900;color:#c9c9c9;margin-bottom:10px}
+    .ticket{background:#171717;border:1px solid #2b2b2b;border-radius:13px;padding:12px;margin:8px 0}
+    .ticket:hover{border-color:#49302f}.ticket strong{font-size:12px}.ticket p{font-size:11px;color:#999;margin:6px 0 10px}
+    .ticket-foot{display:flex;justify-content:space-between;align-items:center;font-size:10px;color:#777}
+    .tabs{display:flex;gap:7px;flex-wrap:wrap;border-bottom:1px solid #292929;margin-bottom:18px}
+    .tab{border:0;background:transparent;color:#909090;padding:11px 12px;border-bottom:2px solid transparent}
+    .tab.active{color:#fff;border-color:var(--red)}
+    .tab-panel{display:none}.tab-panel.active{display:block}
+    .course{
+      overflow:hidden;padding:0
+    }
+    .course-cover{height:120px;background:linear-gradient(135deg,#450905,#171717 60%,#070707);position:relative}
+    .course-cover:after{content:"300";position:absolute;right:14px;bottom:-16px;font-size:70px;font-weight:950;color:rgba(255,255,255,.08)}
+    .course-body{padding:16px}
+    .course-meta{display:flex;justify-content:space-between;gap:10px;color:#8f8f8f;font-size:11px}
+    .calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:7px}
+    .day{min-height:92px;border:1px solid #282828;border-radius:12px;padding:9px;background:#111;font-size:11px;color:#777}
+    .day b{color:#d5d5d5}.event{margin-top:8px;border-left:3px solid var(--red);padding:6px;background:#1a0d0d;border-radius:7px;color:#e3b5b3}
+    .doc-card{display:flex;align-items:center;gap:14px}
+    .doc-icon{width:44px;height:52px;border-radius:9px;background:#201111;border:1px solid #4d1916;display:grid;place-items:center;color:#ff8d88;font-weight:900}
+    .doc-card .grow{flex:1}
+    .stepper{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin:14px 0 20px}
+    .step{height:5px;background:#2c2c2c;border-radius:99px}.step.active{background:var(--red)}
+    .wizard-box{min-height:380px}
+    .wizard-stage{display:none}.wizard-stage.active{display:block}
+    textarea{min-height:120px;resize:vertical;width:100%}
+    .option-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    .option{
+      border:1px solid #2d2d2d;background:#111;border-radius:14px;padding:14px;color:#cfcfcf;text-align:left
+    }
+    .option.selected{border-color:var(--red);background:rgba(225,6,0,.08);color:#fff}
+    .empty{padding:30px;text-align:center;border:1px dashed #333;border-radius:16px;color:#888}
+    .modal{
+      position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;align-items:center;justify-content:center;padding:20px;z-index:50
+    }
+    .modal.open{display:flex}
+    .modal-panel{width:min(720px,100%);max-height:88vh;overflow:auto;background:#111;border:1px solid #333;border-radius:22px;padding:22px;box-shadow:var(--shadow)}
+    .modal-head{display:flex;justify-content:space-between;gap:15px;align-items:start}
+    .toast{position:fixed;right:22px;bottom:22px;background:#171717;border:1px solid #343434;border-left:4px solid var(--red);color:#fff;padding:13px 16px;border-radius:12px;box-shadow:var(--shadow);transform:translateY(120px);opacity:0;transition:.3s;z-index:60;max-width:360px}
+    .toast.show{transform:none;opacity:1}
+    .kicker{font-size:12px;color:#ff8e89;font-weight:800}
+    .news-card{display:flex;gap:16px;align-items:stretch}
+    .news-thumb{width:160px;border-radius:14px;background:linear-gradient(135deg,#4d0d09,#151515);display:grid;place-items:center;font-size:34px;font-weight:950}
+    .news-card .grow{flex:1}
+    .metric-ring{width:72px;height:72px;border-radius:50%;background:conic-gradient(var(--red) 0 78%,#292929 78% 100%);display:grid;place-items:center}
+    .metric-ring:after{content:"78%";width:54px;height:54px;border-radius:50%;background:#111;display:grid;place-items:center;font-size:13px;font-weight:900}
+    .people-card{display:flex;align-items:center;gap:12px}
+    .people-card .avatar{width:44px;height:44px}
+    .people-card .grow{flex:1}
+    .divider{height:1px;background:#272727;margin:16px 0}
+    .mobile-overlay{display:none}
+
+    .brand-filter{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+    .brand-chip{border:1px solid #303030;background:#121212;color:#bbb;border-radius:999px;padding:8px 12px;font-size:12px;font-weight:800}
+    .brand-chip.active{background:rgba(225,6,0,.14);border-color:rgba(225,6,0,.35);color:#fff}
+    .report-preview{min-height:190px;background:linear-gradient(180deg,#171717,#101010);border:1px solid #2c2c2c;border-radius:16px;padding:14px}
+    .mini-bars{display:flex;align-items:end;gap:7px;height:95px;margin-top:18px}
+    .mini-bars span{flex:1;background:linear-gradient(180deg,#e10600,#7e0704);border-radius:7px 7px 2px 2px;min-height:12px}
+    .score-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+    .score-btn{border:1px solid #303030;background:#121212;color:#bbb;border-radius:12px;padding:12px}
+    .score-btn.selected{border-color:var(--red);background:rgba(225,6,0,.1);color:#fff}
+    .perm-table select{min-width:120px}
+    .leaderboard-row{display:grid;grid-template-columns:42px 1fr 90px 90px;gap:10px;align-items:center;padding:12px;border-bottom:1px solid #242424}
+    .rank{width:32px;height:32px;border-radius:10px;background:#1d1d1d;display:grid;place-items:center;font-weight:900}
+    .badge-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+    .badge-card{text-align:center}
+    .badge-icon{width:54px;height:54px;border-radius:18px;background:rgba(225,6,0,.12);display:grid;place-items:center;margin:0 auto 10px;font-weight:950;color:#ff8c86}
+    .one-one-card{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center}
+    .team-row{display:grid;grid-template-columns:1.2fr repeat(4,.7fr);gap:10px;align-items:center;padding:12px;border-bottom:1px solid #242424}
+    .presence-row{display:grid;grid-template-columns:1.2fr .8fr .8fr;gap:10px;align-items:center;padding:10px;border-bottom:1px solid #242424}
+
+
+    .source-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:999px;font-size:10px;font-weight:900;border:1px solid #333}
+    .source-results{background:rgba(48,194,122,.10);color:#76ddb0;border-color:rgba(48,194,122,.22)}
+    .source-crm{background:rgba(85,130,255,.10);color:#9bb4ff;border-color:rgba(85,130,255,.22)}
+    .source-manual{background:rgba(225,6,0,.10);color:#ff938e;border-color:rgba(225,6,0,.24)}
+    .adp-score{font-weight:900;font-size:18px}
+    .adp-layout{display:grid;grid-template-columns:1.3fr .7fr;gap:16px}
+    .field-row{display:grid;grid-template-columns:1.2fr .7fr .7fr auto;gap:10px;align-items:center;padding:11px;border-bottom:1px solid #242424}
+    .readonly-field{background:#0d0d0d;border:1px dashed #303030;color:#8c8c8c;border-radius:10px;padding:9px 11px}
+    .sync-state{display:flex;align-items:center;gap:8px;color:#9a9a9a;font-size:12px}
+    .sync-state:before{content:"";width:8px;height:8px;border-radius:50%;background:var(--warning)}
+
+
+    .adp-result-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+    .trend{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:800}
+    .trend.up{color:var(--success)}.trend.down{color:var(--danger)}
+    .distribution{display:flex;align-items:end;gap:8px;height:150px;padding-top:20px}
+    .distribution-col{flex:1;display:flex;flex-direction:column;justify-content:end;align-items:center;height:100%;gap:7px}
+    .distribution-bar{width:100%;max-width:52px;background:linear-gradient(180deg,#e10600,#690604);border-radius:9px 9px 3px 3px;min-height:8px}
+    .distribution-col small{font-size:10px;color:#888;text-align:center}
+    .matrix{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,110px);gap:7px}
+    .matrix-cell{border:1px solid #2b2b2b;background:#111;border-radius:12px;padding:10px;display:flex;flex-direction:column;justify-content:space-between}
+    .matrix-cell strong{font-size:12px}.matrix-cell span{font-size:10px;color:#858585}
+    .matrix-cell.hot{border-color:rgba(225,6,0,.45);background:rgba(225,6,0,.08)}
+    .matrix-cell.good{border-color:rgba(48,194,122,.3);background:rgba(48,194,122,.06)}
+    .team-score-card{position:relative;overflow:hidden}
+    .team-score-card .big-score{font-size:34px;font-weight:950;letter-spacing:-1px}
+    .team-score-card .mini-progress{height:5px;background:#2a2a2a;border-radius:99px;overflow:hidden;margin-top:10px}
+    .team-score-card .mini-progress span{height:100%;display:block;background:var(--red);border-radius:99px}
+    .visibility-filter{display:flex;gap:8px;flex-wrap:wrap}
+    .insight-card{border-left:3px solid var(--red)}
+
+
+    .roi-formula{background:#0d0d0d;border:1px solid #2b2b2b;border-radius:16px;padding:16px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;line-height:1.7;color:#d8d8d8}
+    .roi-kpi{position:relative;overflow:hidden}
+    .roi-kpi:after{content:"";position:absolute;right:-24px;bottom:-28px;width:100px;height:100px;border-radius:50%;background:rgba(225,6,0,.06)}
+    .roi-breakdown{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .roi-row{display:grid;grid-template-columns:1.2fr .7fr .7fr;gap:10px;padding:10px 0;border-bottom:1px solid #242424;align-items:center}
+    .roi-row:last-child{border-bottom:0}
+    .waterfall{display:flex;align-items:end;gap:8px;height:180px;padding:22px 0 6px}
+    .waterfall-item{flex:1;text-align:center}
+    .waterfall-bar{margin:7px auto 0;width:54px;border-radius:8px 8px 2px 2px;min-height:10px;background:linear-gradient(180deg,#e10600,#760704)}
+    .waterfall-bar.cost{background:linear-gradient(180deg,#444,#222)}
+    .roi-health{display:inline-flex;align-items:center;gap:7px;font-size:11px;font-weight:900}
+    .roi-health:before{content:"";width:8px;height:8px;border-radius:50%;background:var(--success)}
+    .roi-health.warn:before{background:var(--warning)}
+    .roi-health.bad:before{background:var(--danger)}
+
+    @media(max-width:1180px){.adp-result-grid{grid-template-columns:repeat(2,1fr)}.grid-4{grid-template-columns:repeat(2,1fr)}.grid-3{grid-template-columns:repeat(2,1fr)}.badge-grid{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:900px){
+      .roi-breakdown{grid-template-columns:1fr}
+      .adp-layout{grid-template-columns:1fr}.field-row{grid-template-columns:1fr 1fr}
+      .app{grid-template-columns:1fr}
+      .sidebar{position:fixed;left:-300px;width:280px;transition:.25s}
+      .sidebar.open{left:0}
+      .mobile-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:19}
+      .mobile-overlay.open{display:block}
+      .menu-mobile{display:block}
+      .content{padding:20px}
+      .topbar{padding:0 18px}
+      .grid-2,.grid-3,.grid-4{grid-template-columns:1fr 1fr}
+      .option-grid{grid-template-columns:1fr}
+    }
+    @media(max-width:620px){
+      .waterfall{gap:4px}.waterfall-bar{width:34px}.roi-row{grid-template-columns:1fr 1fr}.roi-row>*:last-child{display:none}
+      .adp-result-grid{grid-template-columns:1fr}.matrix{grid-template-columns:1fr;grid-template-rows:none}
+      .field-row{grid-template-columns:1fr}
+      .badge-grid{grid-template-columns:1fr}.leaderboard-row{grid-template-columns:34px 1fr 64px}.leaderboard-row>*:last-child{display:none}.team-row{grid-template-columns:1fr 1fr}.team-row>*:nth-child(n+4){display:none}.presence-row{grid-template-columns:1fr}.score-grid{grid-template-columns:repeat(5,1fr)}
+      .grid-2,.grid-3,.grid-4{grid-template-columns:1fr}
+      .content{padding:15px}
+      .topbar-actions .role-select{display:none}
+      h1{font-size:27px}
+      .hero{padding:22px}
+      .news-card{flex-direction:column}.news-thumb{width:100%;height:120px}
+      .calendar{grid-template-columns:repeat(2,1fr)}
+      .section-head{align-items:start;flex-direction:column}
+      .search{min-width:100%;width:100%}
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-mark">300</div>
+      <div><strong>BÚSSOLA 300</strong><span>300 Franchising</span></div>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-label">Visão geral</div>
+      <button class="nav-btn active" data-page="inicio"><span class="nav-icon">⌂</span>Início</button>
+      <button class="nav-btn" data-page="news"><span class="nav-icon">N</span>News</button>
+      <button class="nav-btn" data-page="metas"><span class="nav-icon">◎</span>Metas & Performance</button>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-label">Conhecimento</div>
+      <button class="nav-btn" data-page="universidade"><span class="nav-icon">U</span>Universidade</button>
+      <button class="nav-btn" data-page="treinamentos"><span class="nav-icon">T</span>Treinamentos</button>
+      <button class="nav-btn" data-page="materiais"><span class="nav-icon">M</span>Materiais de venda</button>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-label">Pessoas & Governança</div>
+      <button class="nav-btn" data-page="pessoas"><span class="nav-icon">P</span>Gestão de pessoas</button>
+      <button class="nav-btn" data-page="recrutamento"><span class="nav-icon">R</span>Recrutamento & seleção</button>
+      <button class="nav-btn" data-page="documentos"><span class="nav-icon">D</span>Documentos & Compliance</button>
+      <button class="nav-btn" data-page="adp"><span class="nav-icon">A</span>ADP</button>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-label">Operação</div>
+      <button class="nav-btn" data-page="chamados"><span class="nav-icon">C</span>Chamados</button>
+      <button class="nav-btn" data-page="financeiro"><span class="nav-icon">R$</span>Financeiro</button>
+      <button class="nav-btn" data-page="gamificacao"><span class="nav-icon">G</span>Gamificação</button>
+      <button class="nav-btn" data-page="relatorios"><span class="nav-icon">↗</span>Relatórios</button>
+      <button class="nav-btn admin-only" data-page="admin"><span class="nav-icon">⚙</span>Administração</button>
+    </div>
+
+    <div class="sidebar-footer">
+      <small>Ambiente</small>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:6px"><span class="dot" style="background:var(--success)"></span><strong style="font-size:12px">Produção</strong></div>
+      <div class="profile-mini">
+        <div class="avatar">VB</div>
+        <div><strong>Vinicius Barreto</strong><span id="profileRole">Administrador</span></div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="mobile-overlay" id="overlay"></div>
+
+  <main>
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="menu-mobile" id="menuBtn">☰</button>
+        <div class="breadcrumb">Bússola 300 / <b id="crumb">Início</b></div>
+      </div>
+      <div class="topbar-actions">
+        <select class="role-select" id="roleSelect" title="Simular perfil de acesso">
+          <option value="admin">Administrador</option>
+          <option value="student">Usuário / Student</option>
+          <option value="assignee">Responsável por Chamado</option>
+          <option value="viewer">Viewer</option>
+        </select>
+        <button class="icon-btn" id="notifyBtn" title="Notificações">●</button>
+        <button class="icon-btn" id="helpBtn" title="Ajuda">?</button>
+      </div>
+    </div>
+
+    <div class="content">
+      <section class="page active" id="page-inicio">
+        <div class="hero">
+          <div class="eyebrow">Sua central de direção</div>
+          <h1>Bem-vindo ao Bússola 300.</h1>
+          <p>Um único lugar para acompanhar metas, conhecimento, treinamentos, pessoas, documentos, suporte e os principais movimentos da 300 Franchising.</p>
+          <div class="hero-actions">
+            <button class="btn btn-primary go" data-go="metas">Ver minhas metas</button>
+            <button class="btn btn-secondary go" data-go="universidade">Continuar aprendendo</button>
+          </div>
+        </div>
+
+        <div class="grid grid-4 stats">
+          <div class="card"><span class="kicker">Meta do mês</span><div class="stat-value">78%</div><div class="progress"><span style="width:78%"></span></div><div class="stat-meta" style="margin-top:8px">Ritmo atual: acima da média</div></div>
+          <div class="card"><span class="kicker">Universidade</span><div class="stat-value">4</div><div class="stat-meta">cursos em andamento</div></div>
+          <div class="card"><span class="kicker">Treinamentos</span><div class="stat-value">2</div><div class="stat-meta">agendados para os próximos 15 dias</div></div>
+          <div class="card"><span class="kicker">Chamados</span><div class="stat-value">3</div><div class="stat-meta">em acompanhamento</div></div>
+        </div>
+
+        <div class="section-head"><div><h2>O que precisa da sua atenção</h2><p>Atalhos priorizados com base na sua jornada.</p></div></div>
+        <div class="grid grid-3">
+          <div class="card module-card"><span class="tag red">Agora</span><div class="module-icon">◎</div><h3>Metas & Performance</h3><p>Acompanhe sua evolução e os indicadores da campanha atual.</p><button class="btn btn-ghost go" data-go="metas">Abrir metas</button></div>
+          <div class="card module-card"><span class="tag">Novo</span><div class="module-icon">T</div><h3>Treinamento presencial</h3><p>Encontro “Venda Consultiva 300” confirmado para quinta-feira.</p><button class="btn btn-ghost go" data-go="treinamentos">Ver agenda</button></div>
+          <div class="card module-card"><span class="tag green">Publicado</span><div class="module-icon">N</div><h3>News</h3><p>Nova campanha de performance e materiais atualizados para a rede.</p><button class="btn btn-ghost go" data-go="news">Ler News</button></div>
+        </div>
+
+        <div class="section-head"><div><h2>Ecossistema Bússola 300</h2><p>Módulos conectados em uma única experiência.</p></div></div>
+        <div class="grid grid-4">
+          <div class="card module-card"><div class="module-icon">P</div><h3>Gestão de pessoas</h3><p>Visão de colaboradores, jornada, evolução, treinamentos e documentos.</p><a class="module-link go" data-go="pessoas" href="#">Acessar →</a></div>
+          <div class="card module-card"><div class="module-icon">R</div><h3>Recrutamento & seleção</h3><p>Vagas, candidatos, etapas e histórico de processo seletivo.</p><a class="module-link go" data-go="recrutamento" href="#">Acessar →</a></div>
+          <div class="card module-card"><div class="module-icon">U</div><h3>Universidade 300</h3><p>Conteúdo EAD, jornadas presenciais e progresso de aprendizagem.</p><a class="module-link go" data-go="universidade" href="#">Acessar →</a></div>
+          <div class="card module-card"><div class="module-icon">D</div><h3>Documentos & Compliance</h3><p>Políticas, termos, documentos obrigatórios e aceite digital.</p><a class="module-link go" data-go="documentos" href="#">Acessar →</a></div>
+        </div>
+      </section>
+
+      <section class="page" id="page-news">
+        <div class="section-head">
+          <div><span class="eyebrow">Comunicação</span><h2>News</h2><p>Atualizações publicadas para a rede e conteúdos vinculados a metas e treinamentos.</p></div>
+          <button class="btn btn-primary admin-only" onclick="openModal('newsModal')">+ Publicar News</button>
+        </div>
+        <div class="grid grid-2">
+          <article class="card news-card">
+            <div class="news-thumb">300</div>
+            <div class="grow"><span class="tag red">Metas</span><h3 style="margin-top:12px">Metas & Performance — Agosto 2026</h3><p>A campanha do mês já está disponível. Confira sua meta, escopo e evolução.</p><button class="btn btn-primary go" data-go="metas">Ver minhas metas</button></div>
+          </article>
+          <article class="card news-card">
+            <div class="news-thumb">T</div>
+            <div class="grow"><span class="tag">Treinamento</span><h3 style="margin-top:12px">Venda Consultiva 300</h3><p>Novo treinamento presencial com lista de presença e NPS vinculados.</p><button class="btn btn-secondary go" data-go="treinamentos">Ver treinamento</button></div>
+          </article>
+          <article class="card news-card">
+            <div class="news-thumb">M</div>
+            <div class="grow"><span class="tag green">Materiais</span><h3 style="margin-top:12px">Kit Comercial atualizado</h3><p>Apresentação institucional, argumentário e materiais de apoio revisados.</p><button class="btn btn-secondary go" data-go="materiais">Abrir materiais</button></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="page" id="page-metas">
+        <div class="section-head">
+          <div><span class="eyebrow">Performance</span><h2>Metas & Performance</h2><p>Campanhas publicadas e resultados de acordo com o seu escopo.</p></div>
+          <button class="btn btn-primary admin-only" onclick="openModal('goalModal')">+ Nova campanha</button>
+        </div>
+        <div class="grid grid-3">
+          <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center"><div><span class="kicker">Campanha atual</span><h3 style="margin-top:6px">Agosto 2026</h3></div><div class="metric-ring"></div></div>
+            <div class="divider"></div><p>Objetivo: acelerar a performance comercial com foco em conversão e qualidade.</p>
+          </div>
+          <div class="card"><span class="kicker">Meta individual</span><div class="stat-value">R$ 78 mil</div><p>de R$ 100 mil planejados</p><div class="progress"><span style="width:78%"></span></div></div>
+          <div class="card"><span class="kicker">Meta da equipe</span><div class="stat-value">84%</div><p>Resultado consolidado do time</p><div class="progress"><span style="width:84%"></span></div></div>
+        </div>
+        <div class="section-head"><div><h2>Indicadores</h2></div></div>
+        <div class="card table-wrap">
+          <table>
+            <thead><tr><th>Indicador</th><th>Escopo</th><th>Meta</th><th>Realizado</th><th>Progresso</th></tr></thead>
+            <tbody>
+              <tr><td>Receita</td><td>Individual</td><td>R$ 100.000</td><td>R$ 78.000</td><td><span class="status warn">78%</span></td></tr>
+              <tr><td>Conversão</td><td>Equipe</td><td>30%</td><td>31,4%</td><td><span class="status ok">104%</span></td></tr>
+              <tr><td>NPS</td><td>Função</td><td>75</td><td>82</td><td><span class="status ok">109%</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="page" id="page-universidade">
+        <div class="section-head">
+          <div><span class="eyebrow">Aprendizagem</span><h2>Universidade 300</h2><p>Formações EAD e presenciais em uma jornada única de desenvolvimento.</p></div>
+          <div class="actions admin-only"><button class="btn btn-secondary">Gerenciar catálogo</button><button class="btn btn-primary">+ Novo curso</button></div>
+        </div>
+        <div class="tabs" data-tabs="uni">
+          <button class="tab active" data-tab="catalogo">Catálogo</button>
+          <button class="tab" data-tab="andamento">Em andamento</button>
+          <button class="tab" data-tab="presenciais">Presenciais</button>
+          <button class="tab" data-tab="concluidos">Concluídos</button>
+        </div>
+        <div class="tab-panel active" data-panel="catalogo">
+          <div class="grid grid-3">
+            <div class="card course"><div class="course-cover"></div><div class="course-body"><span class="tag red">EAD</span><h3 style="margin-top:10px">Fundamentos da Cultura 300</h3><p>5 aulas · 52 min · Obrigatório</p><div class="course-meta"><span>Progresso 60%</span><span>3/5 aulas</span></div><div class="progress" style="margin:8px 0 14px"><span style="width:60%"></span></div><button class="btn btn-primary" onclick="toast('Curso iniciado. Matrícula validada com sucesso.')">Continuar curso</button></div></div>
+            <div class="card course"><div class="course-cover"></div><div class="course-body"><span class="tag">EAD</span><h3 style="margin-top:10px">Excelência Comercial</h3><p>8 aulas · 1h 35 min</p><div class="course-meta"><span>Não iniciado</span><span>0/8 aulas</span></div><div class="progress" style="margin:8px 0 14px"><span style="width:0%"></span></div><button class="btn btn-secondary" onclick="toast('Matrícula criada. Curso liberado para início.')">Começar curso</button></div></div>
+            <div class="card course"><div class="course-cover"></div><div class="course-body"><span class="tag green">Presencial</span><h3 style="margin-top:10px">Liderança na Rede</h3><p>São Paulo · 12/09 · 09h às 17h</p><div class="course-meta"><span>24 vagas</span><span>17 inscritos</span></div><div style="margin:20px 0 14px"></div><button class="btn btn-secondary" onclick="toast('Inscrição registrada para o treinamento presencial.')">Inscrever-me</button></div></div>
+          </div>
+        </div>
+        <div class="tab-panel" data-panel="andamento"><div class="empty">Você tem 4 cursos em andamento. Use o catálogo para continuar.</div></div>
+        <div class="tab-panel" data-panel="presenciais"><div class="empty">Treinamentos presenciais também aparecem no módulo Treinamentos para facilitar presença e NPS.</div></div>
+        <div class="tab-panel" data-panel="concluidos"><div class="empty">Seus certificados e cursos concluídos aparecerão aqui.</div></div>
+      </section>
+
+      <section class="page" id="page-treinamentos">
+        <div class="section-head">
+          <div><span class="eyebrow">Desenvolvimento</span><h2>Treinamentos & Desenvolvimento</h2><p>Agenda, inscrições, lista de presença, NPS e publicação no News.</p></div>
+          <button class="btn btn-primary admin-only" onclick="openModal('trainingModal')">+ Novo treinamento</button>
+        </div>
+
+        <div class="grid grid-4">
+          <div class="card"><span class="kicker">Próximos</span><div class="stat-value">6</div><span class="stat-meta">nos próximos 30 dias</span></div>
+          <div class="card"><span class="kicker">Participação</span><div class="stat-value">91%</div><span class="stat-meta">média de presença</span></div>
+          <div class="card"><span class="kicker">NPS médio</span><div class="stat-value">82</div><span class="stat-meta positive">zona de excelência</span></div>
+          <div class="card"><span class="kicker">Pendências</span><div class="stat-value">3</div><span class="stat-meta warning">listas/NPS para fechar</span></div>
+        </div>
+
+        <div class="section-head"><div><h2>Agenda de treinamentos</h2></div></div>
+        <div class="card">
+          <div class="calendar">
+            <div class="day"><b>Seg 24</b></div>
+            <div class="day"><b>Ter 25</b><div class="event">Onboarding Comercial<br>14:00</div></div>
+            <div class="day"><b>Qua 26</b></div>
+            <div class="day"><b>Qui 27</b><div class="event">Venda Consultiva<br>09:00</div></div>
+            <div class="day"><b>Sex 28</b><div class="event">OpenS Avançado<br>15:00</div></div>
+            <div class="day"><b>Sáb 29</b></div>
+            <div class="day"><b>Dom 30</b></div>
+          </div>
+        </div>
+
+        <div class="section-head"><div><h2>Experiência de aprendizagem</h2><p>Avaliação do participante e biblioteca histórica de treinamentos.</p></div></div>
+        <div class="grid grid-2">
+          <div class="card">
+            <span class="kicker">Avaliar treinamento</span>
+            <h3 style="margin-top:8px">Como foi sua experiência?</h3>
+            <p>Selecione um treinamento concluído, dê uma nota e registre comentários.</p>
+            <select class="field" id="trainingEvalSelect" style="width:100%;margin-bottom:12px">
+              <option>Onboarding Comercial</option>
+              <option>Fundamentos da Cultura 300</option>
+              <option>Excelência Comercial</option>
+            </select>
+            <div class="score-grid" id="trainingScores">
+              <button class="score-btn">1</button><button class="score-btn">2</button><button class="score-btn">3</button><button class="score-btn">4</button><button class="score-btn">5</button>
+            </div>
+            <textarea class="field" id="trainingFeedback" style="margin-top:12px" placeholder="O que funcionou bem? O que pode melhorar?"></textarea>
+            <button class="btn btn-primary" style="margin-top:12px" onclick="submitTrainingEvaluation()">Enviar avaliação</button>
+          </div>
+          <div class="card">
+            <span class="kicker">Biblioteca de treinamentos</span>
+            <h3 style="margin-top:8px">Treinamentos realizados</h3>
+            <div class="toolbar"><input class="search" id="trainingLibrarySearch" placeholder="Buscar treinamento..." /></div>
+            <div class="list" id="trainingLibrary">
+              <div class="list-item" data-training="Venda Consultiva 300 Comercial Presencial"><div class="grow"><strong>Venda Consultiva 300</strong><small>Comercial · Presencial · Ago/2026</small></div><button class="btn btn-ghost" onclick="toast('Treinamento aberto na biblioteca.')">Abrir</button></div>
+              <div class="list-item" data-training="Onboarding Comercial Hibrido"><div class="grow"><strong>Onboarding Comercial</strong><small>Onboarding · Híbrido · Ago/2026</small></div><button class="btn btn-ghost" onclick="toast('Treinamento aberto na biblioteca.')">Abrir</button></div>
+              <div class="list-item" data-training="OpenS Avancado Online"><div class="grow"><strong>OpenS Avançado</strong><small>Operação · Online · Jul/2026</small></div><button class="btn btn-ghost" onclick="toast('Treinamento aberto na biblioteca.')">Abrir</button></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-head"><div><h2>Gestão dos treinamentos</h2><p>Gente & Gestão acompanha presença, avaliação e publicação no News.</p></div></div>
+        <div class="card table-wrap">
+          <table>
+            <thead><tr><th>Treinamento</th><th>Formato</th><th>Data</th><th>Presença</th><th>NPS</th><th>News</th><th></th></tr></thead>
+            <tbody>
+              <tr><td>Venda Consultiva 300</td><td>Presencial</td><td>27/08</td><td><span class="status warn">Pendente</span></td><td>—</td><td><span class="status ok">Vinculado</span></td><td><button class="btn btn-ghost" onclick="openTraining()">Gerenciar</button></td></tr>
+              <tr><td>Onboarding Comercial</td><td>EAD + ao vivo</td><td>25/08</td><td><span class="status ok">95%</span></td><td>86</td><td><span class="status ok">Vinculado</span></td><td><button class="btn btn-ghost" onclick="openTraining()">Gerenciar</button></td></tr>
+              <tr><td>OpenS Avançado</td><td>Online</td><td>28/08</td><td><span class="status">Não iniciado</span></td><td>—</td><td><span class="status warn">Não publicado</span></td><td><button class="btn btn-ghost" onclick="openTraining()">Gerenciar</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="page" id="page-pessoas">
+        <div class="section-head">
+          <div><span class="eyebrow">Gente & Gestão</span><h2>Gestão de pessoas</h2><p>Visão integrada da jornada do colaborador, desenvolvimento e pendências.</p></div>
+          <button class="btn btn-primary admin-only">+ Novo colaborador</button>
+        </div>
+        <div class="grid grid-4">
+          <div class="card"><span class="kicker">Pessoas ativas</span><div class="stat-value">148</div><span class="stat-meta">rede e operação</span></div>
+          <div class="card"><span class="kicker">Novos no mês</span><div class="stat-value">12</div><span class="stat-meta positive">+8% vs. mês anterior</span></div>
+          <div class="card"><span class="kicker">Trilhas pendentes</span><div class="stat-value">23</div><span class="stat-meta warning">requer acompanhamento</span></div>
+          <div class="card"><span class="kicker">Custo médio da operação</span><div class="stat-value">R$ 8,4 mil</div><span class="stat-meta">por colaborador/mês</span></div>
+        </div>
+
+        <div class="section-head"><div><h2>Desempenho & 1:1</h2><p>Leitura gerencial baseada em registros de acompanhamento, entregas e evolução.</p></div></div>
+        <div class="grid grid-3">
+          <div class="card one-one-card"><div><span class="kicker">Média 1:1</span><div class="stat-value">4,4/5</div><p>Resultado consolidado das últimas conversas.</p></div><button class="btn btn-secondary" onclick="openModal('oneOneModal')">Registrar 1:1</button></div>
+          <div class="card"><span class="kicker">Pessoas em destaque</span><div class="stat-value">27</div><span class="stat-meta positive">18% da base</span></div>
+          <div class="card"><span class="kicker">Plano de desenvolvimento</span><div class="stat-value">34</div><span class="stat-meta">PDIs ativos</span></div>
+        </div>
+
+        <div class="section-head"><div><h2>Desempenho por equipe</h2></div></div>
+        <div class="card table-wrap">
+          <div class="team-row" style="color:#888;font-size:11px;text-transform:uppercase"><b>Equipe</b><b>1:1</b><b>Metas</b><b>Treinamentos</b><b>Score</b></div>
+          <div class="team-row"><strong>Comercial</strong><span>4,6</span><span>92%</span><span>88%</span><span class="status ok">Excelente</span></div>
+          <div class="team-row"><strong>Operação</strong><span>4,2</span><span>84%</span><span>91%</span><span class="status ok">Muito bom</span></div>
+          <div class="team-row"><strong>Marketing</strong><span>4,1</span><span>79%</span><span>86%</span><span class="status warn">Atenção</span></div>
+          <div class="team-row"><strong>Expansão</strong><span>4,5</span><span>89%</span><span>93%</span><span class="status ok">Excelente</span></div>
+        </div>
+
+        <div class="section-head"><div><h2>Treinamentos da equipe</h2><p>Selecione um treinamento e gerencie a lista de presença P/F/J diretamente pela Gestão de Pessoas.</p></div></div>
+        <div class="card">
+          <div class="toolbar">
+            <select class="field" id="peopleTrainingSelect" onchange="loadPeopleTraining()">
+              <option>Venda Consultiva 300</option>
+              <option>Onboarding Comercial</option>
+              <option>OpenS Avançado</option>
+            </select>
+            <button class="btn btn-secondary" onclick="loadPeopleTraining()">Carregar lista</button>
+          </div>
+          <div id="peopleTrainingPresence">
+            <div class="presence-row"><strong>Ana Souza</strong><span>Comercial</span><select class="field"><option>P — Presente</option><option>F — Falta</option><option>J — Justificada</option></select></div>
+            <div class="presence-row"><strong>Lucas Prado</strong><span>Expansão</span><select class="field"><option>P — Presente</option><option>F — Falta</option><option>J — Justificada</option></select></div>
+            <div class="presence-row"><strong>Marina Alves</strong><span>Operação</span><select class="field"><option>P — Presente</option><option>F — Falta</option><option>J — Justificada</option></select></div>
+          </div>
+          <button class="btn btn-primary" style="margin-top:14px" onclick="toast('Lista de presença salva pela Gestão de Pessoas.')">Salvar presença</button>
+        </div>
+
+        <div class="section-head"><div><h2>Colaboradores</h2></div><div class="toolbar"><input class="search" id="peopleSearch" placeholder="Buscar pessoa, função ou equipe..." /></div></div>
+        <div class="grid grid-3" id="peopleGrid">
+          <div class="card people-card" data-person="Maira Marketing"><div class="avatar">M</div><div class="grow"><strong>Maira</strong><small>Marketing · Ativa</small></div><button class="btn btn-ghost" onclick="openPerson('Maira','Marketing')">Ver perfil</button></div>
+          <div class="card people-card" data-person="Isabella Operação"><div class="avatar">I</div><div class="grow"><strong>Isabella</strong><small>Operação · Ativa</small></div><button class="btn btn-ghost" onclick="openPerson('Isabella','Operação')">Ver perfil</button></div>
+          <div class="card people-card" data-person="Eloise Operação Comercial"><div class="avatar">E</div><div class="grow"><strong>Eloise</strong><small>Operação Comercial · Ativa</small></div><button class="btn btn-ghost" onclick="openPerson('Eloise','Operação Comercial')">Ver perfil</button></div>
+          <div class="card people-card" data-person="Mauricio Operação"><div class="avatar">M</div><div class="grow"><strong>Mauricio</strong><small>Operação · Ativo</small></div><button class="btn btn-ghost" onclick="openPerson('Mauricio','Operação')">Ver perfil</button></div>
+          <div class="card people-card" data-person="Vinicius Gestão"><div class="avatar">V</div><div class="grow"><strong>Vinicius</strong><small>Gestão · Ativo</small></div><button class="btn btn-ghost" onclick="openPerson('Vinicius','Gestão')">Ver perfil</button></div>
+          <div class="card people-card" data-person="Admin2 Administração"><div class="avatar">A</div><div class="grow"><strong>Admin2</strong><small>Administração · Ativo</small></div><button class="btn btn-ghost" onclick="openPerson('Admin2','Administração')">Ver perfil</button></div>
+        </div>
+      </section>
+
+      <section class="page" id="page-recrutamento">
+        <div class="section-head">
+          <div><span class="eyebrow">Talent Acquisition</span><h2>Recrutamento & Seleção</h2><p>Vagas, candidatos e pipeline de contratação sem perder o histórico.</p></div>
+          <button class="btn btn-primary admin-only" onclick="openModal('vacancyModal')">+ Nova vaga</button>
+        </div>
+        <div class="grid grid-3">
+          <div class="card"><span class="kicker">Vagas abertas</span><div class="stat-value">7</div><span class="stat-meta">3 prioritárias</span></div>
+          <div class="card"><span class="kicker">Candidatos ativos</span><div class="stat-value">54</div><span class="stat-meta">em processo</span></div>
+          <div class="card"><span class="kicker">Tempo médio</span><div class="stat-value">18d</div><span class="stat-meta">até contratação</span></div>
+        </div>
+
+        <div class="section-head"><div><h2>Pipeline de candidatos</h2></div></div>
+        <div class="kanban">
+          <div class="kanban-col"><div class="kanban-title">Inscritos <span>18</span></div><div class="ticket"><strong>Ana Souza</strong><p>Analista de Expansão</p><div class="ticket-foot"><span>LinkedIn</span><span>Hoje</span></div></div><div class="ticket"><strong>Lucas Prado</strong><p>Executivo Comercial</p><div class="ticket-foot"><span>Indicação</span><span>1d</span></div></div></div>
+          <div class="kanban-col"><div class="kanban-title">Triagem <span>11</span></div><div class="ticket"><strong>Marina Alves</strong><p>CS Franquias</p><div class="ticket-foot"><span>Gupy</span><span>2d</span></div></div></div>
+          <div class="kanban-col"><div class="kanban-title">Entrevista <span>7</span></div><div class="ticket"><strong>João Lima</strong><p>Analista de Dados</p><div class="ticket-foot"><span>Entrevista 27/08</span><span>3d</span></div></div></div>
+          <div class="kanban-col"><div class="kanban-title">Proposta <span>2</span></div><div class="ticket"><strong>Camila Ribeiro</strong><p>Consultora de Implantação</p><div class="ticket-foot"><span>Proposta enviada</span><span>Hoje</span></div></div></div>
+        </div>
+      </section>
+
+      <section class="page" id="page-documentos">
+        <div class="section-head">
+          <div><span class="eyebrow">Governança</span><h2>Documentos & Compliance</h2><p>Políticas, documentos obrigatórios, versionamento e aceite.</p></div>
+          <button class="btn btn-primary admin-only" onclick="openModal('docModal')">+ Novo documento</button>
+        </div>
+        <div class="grid grid-4">
+          <div class="card"><span class="kicker">Conformidade geral</span><div class="stat-value">94%</div><span class="stat-meta positive">+3 p.p.</span></div>
+          <div class="card"><span class="kicker">Aceites pendentes</span><div class="stat-value">9</div><span class="stat-meta warning">usuários pendentes</span></div>
+          <div class="card"><span class="kicker">Vencimentos</span><div class="stat-value">4</div><span class="stat-meta">nos próximos 30 dias</span></div>
+          <div class="card"><span class="kicker">Versões vigentes</span><div class="stat-value">28</div><span class="stat-meta">documentos publicados</span></div>
+        </div>
+
+        <div class="section-head"><div><h2>Biblioteca de documentos</h2></div><div class="toolbar"><select class="field"><option>Todos os tipos</option><option>Políticas</option><option>Termos</option><option>LGPD</option><option>Contratos</option></select></div></div>
+        <div class="grid grid-2">
+          <div class="card doc-card"><div class="doc-icon">PDF</div><div class="grow"><strong>Política de Segurança da Informação</strong><p>v3.2 · Publicado em 12/08/2026 · Aceite obrigatório</p><span class="status ok">Aceite realizado</span></div><button class="btn btn-ghost" onclick="toast('Documento aberto em modo seguro.')">Abrir</button></div>
+          <div class="card doc-card"><div class="doc-icon">PDF</div><div class="grow"><strong>Código de Conduta 300</strong><p>v2.0 · Publicado em 01/08/2026</p><span class="status warn">Aceite pendente</span></div><button class="btn btn-primary" onclick="toast('Aceite registrado com data, usuário e versão do documento.')">Ler e aceitar</button></div>
+          <div class="card doc-card"><div class="doc-icon">DOC</div><div class="grow"><strong>Termo de Confidencialidade</strong><p>v1.8 · Atualizado em 20/07/2026</p><span class="status ok">Vigente</span></div><button class="btn btn-ghost" onclick="toast('Documento aberto em modo seguro.')">Abrir</button></div>
+          <div class="card doc-card"><div class="doc-icon">PDF</div><div class="grow"><strong>Diretrizes LGPD</strong><p>v4.1 · Atualizado em 15/08/2026</p><span class="status ok">Vigente</span></div><button class="btn btn-ghost" onclick="toast('Documento aberto em modo seguro.')">Abrir</button></div>
+        </div>
+      </section>
+
+      <section class="page" id="page-materiais">
+        <div class="section-head">
+          <div><span class="eyebrow">Comercial</span><h2>Materiais de venda</h2><p>Um repositório único para apresentações, scripts, playbooks e materiais vigentes.</p></div>
+          <button class="btn btn-primary admin-only" onclick="openModal('materialModal')">+ Novo material</button>
+        </div>
+        <div class="brand-filter" id="brandFilter">
+          <button class="brand-chip active" data-brand="all">Todas as marcas</button>
+          <button class="brand-chip" data-brand="300 Franchising">300 Franchising</button>
+          <button class="brand-chip" data-brand="Mercadão dos Óculos">Mercadão dos Óculos</button>
+          <button class="brand-chip" data-brand="V4 Company">V4 Company</button>
+          <button class="brand-chip" data-brand="Outras">Outras</button>
+        </div>
+        <div class="toolbar">
+          <input class="search" id="materialSearch" placeholder="Buscar material..." />
+          <select class="field" id="materialType"><option value="all">Todos</option><option>Apresentações</option><option>Scripts</option><option>Playbooks</option><option>Cases</option></select>
+        </div>
+        <div class="grid grid-3" id="materialsGrid">
+          <div class="card module-card material-item" data-brand="300 Franchising" data-type="Apresentações" data-title="Apresentação Institucional 300"><span class="tag green">Atualizado</span><div class="module-icon">PPT</div><h3>Apresentação Institucional 300</h3><p>Versão comercial oficial · Ago/2026</p><button class="btn btn-secondary" onclick="toast('Material aberto. Versão vigente validada.')">Abrir material</button></div>
+          <div class="card module-card material-item" data-brand="300 Franchising" data-type="Scripts" data-title="Script de Diagnóstico"><span class="tag">Script</span><div class="module-icon">S</div><h3>Script de Diagnóstico</h3><p>Perguntas de qualificação e condução de primeira reunião.</p><button class="btn btn-secondary" onclick="toast('Script aberto.')">Abrir material</button></div>
+          <div class="card module-card material-item" data-brand="300 Franchising" data-type="Playbooks" data-title="Playbook Comercial 300"><span class="tag red">Novo</span><div class="module-icon">PB</div><h3>Playbook Comercial 300</h3><p>Fluxo completo de prospecção, diagnóstico, proposta e follow-up.</p><button class="btn btn-secondary" onclick="toast('Playbook aberto.')">Abrir material</button></div>
+          <div class="card module-card material-item" data-brand="Mercadão dos Óculos" data-type="Cases" data-title="Cases de Expansão"><span class="tag">Case</span><div class="module-icon">C</div><h3>Cases de Expansão</h3><p>Materiais aprovados para apoio em reuniões comerciais.</p><button class="btn btn-secondary" onclick="toast('Case aberto.')">Abrir material</button></div>
+        </div>
+      </section>
+
+
+      <section class="page" id="page-adp">
+        <div class="section-head">
+          <div>
+            <span class="eyebrow">Avaliação & Desenvolvimento</span>
+            <h2>ADP</h2>
+            <p>Centraliza os dados da planilha em uma jornada estruturada, distinguindo fontes automáticas e campos de alimentação manual.</p>
+          </div>
+          <div class="actions adp-manage-only">
+            <button class="btn btn-secondary" onclick="openModal('adpImportModal')">Importar planilha</button>
+            <button class="btn btn-primary" onclick="openModal('adpCycleModal')">+ Novo ciclo ADP</button>
+          </div>
+        </div>
+
+        <div class="grid grid-4">
+          <div class="card"><span class="kicker">Colaboradores no ciclo</span><div class="stat-value">148</div><span class="stat-meta">Agosto/2026</span></div>
+          <div class="card"><span class="kicker">Preenchimento</span><div class="stat-value">76%</div><span class="stat-meta">112 avaliações concluídas</span></div>
+          <div class="card"><span class="kicker">Score médio ADP</span><div class="stat-value">4,18</div><span class="stat-meta positive">+0,22 vs. ciclo anterior</span></div>
+          <div class="card"><span class="kicker">Pendências manuais</span><div class="stat-value">36</div><span class="stat-meta warning">requer ação do responsável</span></div>
+        </div>
+
+        <div class="section-head">
+          <div><h2>Resultados & Visibilidade do ADP</h2><p>Leitura executiva do ciclo atual, com visão consolidada e comparação entre equipes.</p></div>
+          <div class="visibility-filter">
+            <select class="field" id="adpCycleView" onchange="refreshAdpVisibility()">
+              <option>Agosto 2026</option>
+              <option>Julho 2026</option>
+              <option>Junho 2026</option>
+            </select>
+            <select class="field" id="adpTeamView" onchange="refreshAdpVisibility()">
+              <option>Todas as equipes</option>
+              <option>Comercial</option>
+              <option>Expansão</option>
+              <option>Operação</option>
+              <option>Marketing</option>
+            </select>
+            <button class="btn btn-secondary" onclick="toast('Visão ADP exportada no protótipo.')">Exportar visão</button>
+          </div>
+        </div>
+
+        <div class="adp-result-grid">
+          <div class="card"><span class="kicker">Score geral</span><div class="stat-value">4,18</div><span class="trend up">▲ 5,6% vs. ciclo anterior</span></div>
+          <div class="card"><span class="kicker">Alta performance</span><div class="stat-value">31%</div><span class="stat-meta">46 colaboradores</span></div>
+          <div class="card"><span class="kicker">Em desenvolvimento</span><div class="stat-value">18%</div><span class="stat-meta warning">27 colaboradores</span></div>
+          <div class="card"><span class="kicker">PDIs ativos</span><div class="stat-value">34</div><span class="trend up">▲ 9 novos no ciclo</span></div>
+        </div>
+
+        <div class="grid grid-2" style="margin-top:16px">
+          <div class="card">
+            <div style="display:flex;justify-content:space-between;gap:10px;align-items:start">
+              <div><span class="kicker">Distribuição de desempenho</span><h3 style="margin-top:7px">Score ADP</h3></div>
+              <span class="tag">148 pessoas</span>
+            </div>
+            <div class="distribution">
+              <div class="distribution-col"><b>6%</b><div class="distribution-bar" style="height:20%"></div><small>1,0–1,9</small></div>
+              <div class="distribution-col"><b>12%</b><div class="distribution-bar" style="height:38%"></div><small>2,0–2,9</small></div>
+              <div class="distribution-col"><b>28%</b><div class="distribution-bar" style="height:66%"></div><small>3,0–3,9</small></div>
+              <div class="distribution-col"><b>37%</b><div class="distribution-bar" style="height:88%"></div><small>4,0–4,4</small></div>
+              <div class="distribution-col"><b>17%</b><div class="distribution-bar" style="height:51%"></div><small>4,5–5,0</small></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <span class="kicker">Evolução dos ciclos</span>
+            <h3 style="margin-top:7px">Score médio</h3>
+            <div style="display:flex;align-items:end;gap:12px;height:150px;margin-top:10px">
+              <div style="flex:1;text-align:center"><b>3,72</b><div style="height:62px;background:#292929;border-radius:8px 8px 2px 2px;margin:7px auto;width:44px"></div><small style="color:#888">Abr</small></div>
+              <div style="flex:1;text-align:center"><b>3,81</b><div style="height:74px;background:#333;border-radius:8px 8px 2px 2px;margin:7px auto;width:44px"></div><small style="color:#888">Mai</small></div>
+              <div style="flex:1;text-align:center"><b>3,89</b><div style="height:86px;background:#3a3a3a;border-radius:8px 8px 2px 2px;margin:7px auto;width:44px"></div><small style="color:#888">Jun</small></div>
+              <div style="flex:1;text-align:center"><b>3,96</b><div style="height:98px;background:#68110e;border-radius:8px 8px 2px 2px;margin:7px auto;width:44px"></div><small style="color:#888">Jul</small></div>
+              <div style="flex:1;text-align:center"><b>4,18</b><div style="height:125px;background:linear-gradient(180deg,#e10600,#7b0805);border-radius:8px 8px 2px 2px;margin:7px auto;width:44px"></div><small style="color:#fff">Ago</small></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-head"><div><h2>Desempenho por equipe</h2><p>Comparação do score ADP e evolução de cada time.</p></div></div>
+        <div class="grid grid-4">
+          <div class="card team-score-card"><span class="kicker">Comercial</span><div class="big-score">4,46</div><span class="trend up">▲ 0,28</span><div class="mini-progress"><span style="width:89%"></span></div><p style="margin-top:10px">92% do ciclo concluído</p></div>
+          <div class="card team-score-card"><span class="kicker">Expansão</span><div class="big-score">4,31</div><span class="trend up">▲ 0,19</span><div class="mini-progress"><span style="width:86%"></span></div><p style="margin-top:10px">88% do ciclo concluído</p></div>
+          <div class="card team-score-card"><span class="kicker">Operação</span><div class="big-score">4,02</div><span class="trend up">▲ 0,11</span><div class="mini-progress"><span style="width:80%"></span></div><p style="margin-top:10px">79% do ciclo concluído</p></div>
+          <div class="card team-score-card"><span class="kicker">Marketing</span><div class="big-score">3,87</div><span class="trend down">▼ 0,07</span><div class="mini-progress"><span style="width:77%"></span></div><p style="margin-top:10px">71% do ciclo concluído</p></div>
+        </div>
+
+        <div class="section-head"><div><h2>Matriz de talentos</h2><p>Visão 9-box simplificada: desempenho atual × potencial de desenvolvimento.</p></div></div>
+        <div class="grid grid-2">
+          <div class="card">
+            <div class="matrix">
+              <div class="matrix-cell good"><strong>Potencial alto / desempenho baixo</strong><span>5 pessoas</span></div>
+              <div class="matrix-cell good"><strong>Potencial alto / desempenho médio</strong><span>14 pessoas</span></div>
+              <div class="matrix-cell hot"><strong>Talentos-chave</strong><span>23 pessoas</span></div>
+              <div class="matrix-cell"><strong>Potencial médio / desempenho baixo</strong><span>8 pessoas</span></div>
+              <div class="matrix-cell"><strong>Contribuidores consistentes</strong><span>41 pessoas</span></div>
+              <div class="matrix-cell good"><strong>Alta performance</strong><span>29 pessoas</span></div>
+              <div class="matrix-cell"><strong>Baixo potencial / desempenho baixo</strong><span>4 pessoas</span></div>
+              <div class="matrix-cell"><strong>Especialistas</strong><span>13 pessoas</span></div>
+              <div class="matrix-cell"><strong>Performance estável</strong><span>11 pessoas</span></div>
+            </div>
+          </div>
+          <div class="card">
+            <span class="kicker">Insights gerenciais</span>
+            <div class="list" style="margin-top:12px">
+              <div class="list-item insight-card"><div class="grow"><strong>Comercial lidera o ciclo</strong><small>Score 4,46 e evolução de +0,28.</small></div><button class="btn btn-ghost" onclick="toast('Detalhamento da equipe Comercial aberto.')">Detalhar</button></div>
+              <div class="list-item insight-card"><div class="grow"><strong>Marketing requer acompanhamento</strong><small>Única equipe com queda de score no ciclo atual.</small></div><button class="btn btn-ghost" onclick="toast('Plano de acompanhamento da equipe Marketing aberto.')">Detalhar</button></div>
+              <div class="list-item insight-card"><div class="grow"><strong>23 talentos-chave identificados</strong><small>Alto desempenho e alto potencial.</small></div><button class="btn btn-ghost" onclick="toast('Lista de talentos-chave aberta.')">Ver pessoas</button></div>
+              <div class="list-item insight-card"><div class="grow"><strong>27 pessoas em desenvolvimento</strong><small>Indicação de PDI ou acompanhamento no próximo 1:1.</small></div><button class="btn btn-ghost" onclick="toast('Pessoas em desenvolvimento abertas.')">Ver pessoas</button></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-head"><div><h2>Visibilidade por perfil</h2><p>O resultado exibido depende do escopo autorizado para cada usuário.</p></div></div>
+        <div class="card table-wrap">
+          <table>
+            <thead><tr><th>Perfil</th><th>Visibilidade</th><th>Comparação</th><th>Dados individuais</th><th>Exportação</th></tr></thead>
+            <tbody>
+              <tr><td>Colaborador</td><td>Próprio resultado publicado</td><td>Não</td><td>Somente o próprio</td><td>Não</td></tr>
+              <tr><td>Gestor</td><td>Equipe sob gestão</td><td>Dentro da própria equipe</td><td>Equipe autorizada</td><td>Conforme permissão</td></tr>
+              <tr><td>Gente & Gestão</td><td>Escopo organizacional autorizado</td><td>Equipes e ciclos</td><td>Sim</td><td>Sim</td></tr>
+              <tr><td>Diretoria</td><td>Consolidado executivo</td><td>Equipes, áreas e ciclos</td><td>Conforme política</td><td>Sim</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+
+        <div class="section-head">
+          <div><h2>Origem dos dados</h2><p>Cada indicador sabe de onde vem e quem pode alterá-lo.</p></div>
+        </div>
+        <div class="grid grid-3">
+          <div class="card">
+            <span class="source-badge source-results">RESULTADOS · AUTOMÁTICO</span>
+            <h3 style="margin-top:12px">Indicadores de resultado</h3>
+            <p>Metas, entregas, produtividade e demais métricas vindas da fonte oficial de Resultados. No ADP são somente leitura.</p>
+            <div class="sync-state">Integração preparada para sincronização</div>
+          </div>
+          <div class="card">
+            <span class="source-badge source-crm">CRM · AUTOMÁTICO</span>
+            <h3 style="margin-top:12px">Indicadores comerciais</h3>
+            <p>Conversão, atividades, oportunidades, vendas e demais dados originados no CRM. No ADP são somente leitura.</p>
+            <div class="sync-state">Integração preparada para sincronização</div>
+          </div>
+          <div class="card">
+            <span class="source-badge source-manual">BÚSSOLA · MANUAL</span>
+            <h3 style="margin-top:12px">Critérios sem fonte sistêmica</h3>
+            <p>Todo campo que não vier de Resultados nem do CRM poderá ser alimentado dentro do próprio ADP, com responsável, data e histórico.</p>
+            <button class="btn btn-secondary adp-manage-only" onclick="openModal('adpManualFieldModal')">Gerenciar campos</button>
+          </div>
+        </div>
+
+        <div class="section-head">
+          <div><h2>Matriz ADP</h2><p>Acompanhamento consolidado por colaborador.</p></div>
+          <div class="toolbar">
+            <input class="search" id="adpSearch" placeholder="Buscar colaborador ou equipe..." />
+            <select class="field" id="adpStatusFilter">
+              <option value="all">Todos os status</option>
+              <option value="Concluído">Concluído</option>
+              <option value="Em preenchimento">Em preenchimento</option>
+              <option value="Pendente">Pendente</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="card table-wrap">
+          <table id="adpTable">
+            <thead>
+              <tr><th>Colaborador</th><th>Equipe</th><th>Resultados</th><th>CRM</th><th>Manual</th><th>Score final</th><th>Status</th><th></th></tr>
+            </thead>
+            <tbody>
+              <tr data-adp="Ana Souza Comercial Concluído"><td>Ana Souza</td><td>Comercial</td><td><span class="source-badge source-results">4,6</span></td><td><span class="source-badge source-crm">4,4</span></td><td><span class="source-badge source-manual">4,8</span></td><td><span class="adp-score">4,60</span></td><td><span class="status ok">Concluído</span></td><td><button class="btn btn-ghost" onclick="openADP('Ana Souza','Comercial','4,60')">Abrir</button></td></tr>
+              <tr data-adp="Lucas Prado Expansão Em preenchimento"><td>Lucas Prado</td><td>Expansão</td><td><span class="source-badge source-results">4,2</span></td><td><span class="source-badge source-crm">4,0</span></td><td><span class="source-badge source-manual">3,9</span></td><td><span class="adp-score">4,03</span></td><td><span class="status warn">Em preenchimento</span></td><td><button class="btn btn-ghost" onclick="openADP('Lucas Prado','Expansão','4,03')">Abrir</button></td></tr>
+              <tr data-adp="Marina Alves Operação Pendente"><td>Marina Alves</td><td>Operação</td><td><span class="source-badge source-results">4,1</span></td><td><span class="source-badge source-crm">—</span></td><td><span class="source-badge source-manual">—</span></td><td><span class="adp-score">—</span></td><td><span class="status red">Pendente</span></td><td><button class="btn btn-ghost" onclick="openADP('Marina Alves','Operação','—')">Abrir</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="section-head"><div><h2>Campos do ADP</h2><p>Modelo de organização para receber todas as colunas da planilha.</p></div></div>
+        <div class="card">
+          <div class="field-row" style="color:#7f7f7f;font-size:11px;text-transform:uppercase"><b>Campo</b><b>Origem</b><b>Permissão</b><b></b></div>
+          <div class="field-row"><strong>Atingimento de meta</strong><span class="source-badge source-results">Resultados</span><span>Somente leitura</span><button class="btn btn-ghost" onclick="toast('Mapeamento do campo aberto.')">Mapear</button></div>
+          <div class="field-row"><strong>Conversão comercial</strong><span class="source-badge source-crm">CRM</span><span>Somente leitura</span><button class="btn btn-ghost" onclick="toast('Mapeamento do campo aberto.')">Mapear</button></div>
+          <div class="field-row"><strong>Critério comportamental</strong><span class="source-badge source-manual">Manual</span><span>Gestor / G&G</span><button class="btn btn-ghost adp-manage-only" onclick="openModal('adpManualFieldModal')">Editar</button></div>
+          <div class="field-row"><strong>Plano de desenvolvimento</strong><span class="source-badge source-manual">Manual</span><span>Gestor / G&G</span><button class="btn btn-ghost adp-manage-only" onclick="openModal('adpManualFieldModal')">Editar</button></div>
+        </div>
+
+        <div class="section-head"><div><h2>Governança do módulo</h2><p>As visões do ADP também respeitam permissões específicas.</p></div></div>
+        <div class="card table-wrap">
+          <table>
+            <thead><tr><th>Perfil</th><th>Visualiza</th><th>Edita campos manuais</th><th>Importa</th><th>Configura campos</th></tr></thead>
+            <tbody>
+              <tr><td>Colaborador</td><td>Próprio ADP publicado</td><td>Conforme campo</td><td>Não</td><td>Não</td></tr>
+              <tr><td>Gestor</td><td>Sua equipe</td><td>Sim, nos campos permitidos</td><td>Não</td><td>Não</td></tr>
+              <tr><td>Gente & Gestão</td><td>Escopo autorizado</td><td>Sim</td><td>Sim</td><td>Sim</td></tr>
+              <tr><td>Administrador</td><td>Conforme permission</td><td>Conforme permission</td><td>Conforme permission</td><td>Conforme permission</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="page" id="page-chamados">
+        <div class="section-head">
+          <div><span class="eyebrow">Suporte</span><h2>Chamados</h2><p>Jornada oficial: Área → Motivo → Contexto → Impacto → Evidências → Encaminhamento → Revisão.</p></div>
+          <button class="btn btn-primary" onclick="openModal('ticketModal')">+ Abrir chamado</button>
+        </div>
+        <div class="grid grid-4">
+          <div class="card"><span class="kicker">Meus abertos</span><div class="stat-value">3</div></div>
+          <div class="card"><span class="kicker">Dentro do SLA</span><div class="stat-value">92%</div></div>
+          <div class="card"><span class="kicker">Resolvidos no mês</span><div class="stat-value">31</div></div>
+          <div class="card"><span class="kicker">Críticos</span><div class="stat-value">1</div></div>
+        </div>
+        <div class="section-head"><div><h2>Quadro</h2><p>Somente o responsável atual pode movimentar o status.</p></div></div>
+        <div class="kanban">
+          <div class="kanban-col"><div class="kanban-title">Aberto <span>3</span></div><div class="ticket"><strong>#1042 · Dashboard / BI</strong><p>Divergência no indicador de conversão.</p><div class="ticket-foot"><span>Resp. Isabella</span><button class="btn btn-ghost ticket-move" onclick="moveTicket()">Mover</button></div></div></div>
+          <div class="kanban-col"><div class="kanban-title">Em atendimento <span>5</span></div><div class="ticket"><strong>#1038 · Treinamentos</strong><p>Dúvida sobre trilha de onboarding.</p><div class="ticket-foot"><span>Resp. Eloise</span><button class="btn btn-ghost ticket-move" onclick="moveTicket()">Mover</button></div></div></div>
+          <div class="kanban-col"><div class="kanban-title">Aguardando <span>2</span></div><div class="ticket"><strong>#1031 · CRM</strong><p>Permissão de acesso a pipeline.</p><div class="ticket-foot"><span>Resp. Isabella</span><button class="btn btn-ghost ticket-move" onclick="moveTicket()">Mover</button></div></div></div>
+          <div class="kanban-col"><div class="kanban-title">Resolvido <span>12</span></div><div class="ticket"><strong>#1019 · Comercial</strong><p>Ajuste de script comercial.</p><div class="ticket-foot"><span>Resp. Eloise</span><span>Resolvido</span></div></div></div>
+        </div>
+      </section>
+
+
+      <section class="page" id="page-financeiro">
+        <div class="section-head">
+          <div><span class="eyebrow">Financeiro & Pessoas</span><h2>Financeiro</h2><p>Visão de custo, produtividade, contribuição e retorno gerado por colaborador, função e equipe.</p></div>
+          <div class="actions admin-only">
+            <button class="btn btn-secondary" onclick="toast('Exportação financeira preparada no protótipo.')">Exportar</button>
+            <button class="btn btn-primary" onclick="openModal('roiModal')">Configurar ROI</button>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <select class="field" id="roiPeriod" onchange="refreshROI()"><option>Agosto 2026</option><option>Julho 2026</option><option>Junho 2026</option></select>
+          <select class="field" id="roiTeam" onchange="refreshROI()"><option>Todas as equipes</option><option>Comercial</option><option>Expansão</option><option>Operação</option><option>Marketing</option></select>
+          <select class="field" id="roiView" onchange="refreshROI()"><option>Por colaborador</option><option>Por equipe</option><option>Por função</option></select>
+        </div>
+
+        <div class="grid grid-4">
+          <div class="card roi-kpi"><span class="kicker">Custo mensal de pessoas</span><div class="stat-value">R$ 1,24 mi</div><span class="stat-meta">folha + encargos + benefícios + rateios</span></div>
+          <div class="card roi-kpi"><span class="kicker">ROI médio por colaborador</span><div class="stat-value">2,8x</div><span class="stat-meta positive">meta interna: 2,4x</span></div>
+          <div class="card roi-kpi"><span class="kicker">Margem de contribuição</span><div class="stat-value">R$ 2,23 mi</div><span class="stat-meta">resultado atribuído menos custo direto</span></div>
+          <div class="card roi-kpi"><span class="kicker">Payback médio</span><div class="stat-value">10,7d</div><span class="stat-meta">tempo estimado para recuperar o custo mensal</span></div>
+        </div>
+
+        <div class="section-head"><div><h2>Como o ROI é calculado</h2><p>O objetivo é deixar o indicador auditável, sem misturar faturamento bruto com retorno real.</p></div></div>
+        <div class="grid grid-2">
+          <div class="card">
+            <span class="kicker">Fórmula gerencial</span>
+            <div class="roi-formula" style="margin-top:12px">
+              ROI = Resultado Líquido Atribuído ÷ Custo Total do Colaborador<br><br>
+              Resultado Líquido Atribuído = Resultado Atribuído − Custos Variáveis Atribuídos<br>
+              Custo Total = Salário + Encargos + Benefícios + Bônus + Rateio Operacional
+            </div>
+            <p style="margin-top:12px">Exemplo: resultado líquido atribuído de R$ 31.200 ÷ custo total de R$ 8.900 = <b style="color:#fff">3,5x</b>.</p>
+          </div>
+          <div class="card">
+            <span class="kicker">Faixas de interpretação</span>
+            <div class="list" style="margin-top:12px">
+              <div class="list-item"><div class="grow"><strong>≥ 3,0x</strong><small>Retorno forte</small></div><span class="roi-health">Excelente</span></div>
+              <div class="list-item"><div class="grow"><strong>2,4x a 2,99x</strong><small>Dentro da meta</small></div><span class="roi-health">Saudável</span></div>
+              <div class="list-item"><div class="grow"><strong>1,5x a 2,39x</strong><small>Retorno abaixo da meta</small></div><span class="roi-health warn">Acompanhar</span></div>
+              <div class="list-item"><div class="grow"><strong>&lt; 1,5x</strong><small>Retorno insuficiente</small></div><span class="roi-health bad">Crítico</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-head"><div><h2>Composição do custo</h2><p>Abra o custo médio para entender o que está pressionando ou melhorando o retorno.</p></div></div>
+        <div class="grid grid-2">
+          <div class="card">
+            <div class="roi-row"><strong>Salário base</strong><span>R$ 5.200</span><span>58,4%</span></div>
+            <div class="roi-row"><strong>Encargos</strong><span>R$ 1.560</span><span>17,5%</span></div>
+            <div class="roi-row"><strong>Benefícios</strong><span>R$ 780</span><span>8,8%</span></div>
+            <div class="roi-row"><strong>Variável / bônus</strong><span>R$ 610</span><span>6,9%</span></div>
+            <div class="roi-row"><strong>Rateio operacional</strong><span>R$ 750</span><span>8,4%</span></div>
+            <div class="roi-row"><strong>Custo total médio</strong><span><b>R$ 8.900</b></span><span>100%</span></div>
+          </div>
+          <div class="card">
+            <span class="kicker">Ponte de resultado</span>
+            <div class="waterfall">
+              <div class="waterfall-item"><b>R$ 42k</b><div class="waterfall-bar" style="height:140px"></div><small>Resultado bruto</small></div>
+              <div class="waterfall-item"><b>-R$ 10,8k</b><div class="waterfall-bar cost" style="height:58px"></div><small>Custos variáveis</small></div>
+              <div class="waterfall-item"><b>R$ 31,2k</b><div class="waterfall-bar" style="height:104px"></div><small>Resultado líquido</small></div>
+              <div class="waterfall-item"><b>-R$ 8,9k</b><div class="waterfall-bar cost" style="height:48px"></div><small>Custo pessoa</small></div>
+              <div class="waterfall-item"><b>R$ 22,3k</b><div class="waterfall-bar" style="height:82px"></div><small>Contribuição</small></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-head"><div><h2>ROI por colaborador</h2><p>Drill-down individual com custo, resultado, contribuição e tendência.</p></div></div>
+        <div class="card table-wrap">
+          <table>
+            <thead><tr><th>Colaborador</th><th>Equipe</th><th>Custo total</th><th>Resultado líquido</th><th>Contribuição</th><th>ROI</th><th>vs. mês anterior</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+              <tr><td>Ana Souza</td><td>Comercial</td><td>R$ 8.900</td><td>R$ 31.200</td><td>R$ 22.300</td><td><b>3,5x</b></td><td><span class="positive">▲ 0,4x</span></td><td><span class="status ok">Acima da meta</span></td><td><button class="btn btn-ghost" onclick="openROIDetail('Ana Souza','Comercial','3,5x','R$ 8.900','R$ 31.200')">Detalhar</button></td></tr>
+              <tr><td>Lucas Prado</td><td>Expansão</td><td>R$ 9.800</td><td>R$ 25.100</td><td>R$ 15.300</td><td><b>2,6x</b></td><td><span class="positive">▲ 0,1x</span></td><td><span class="status ok">Saudável</span></td><td><button class="btn btn-ghost" onclick="openROIDetail('Lucas Prado','Expansão','2,6x','R$ 9.800','R$ 25.100')">Detalhar</button></td></tr>
+              <tr><td>Marina Alves</td><td>Operação</td><td>R$ 7.600</td><td>R$ 15.100</td><td>R$ 7.500</td><td><b>2,0x</b></td><td><span class="negative">▼ 0,2x</span></td><td><span class="status warn">Acompanhar</span></td><td><button class="btn btn-ghost" onclick="openROIDetail('Marina Alves','Operação','2,0x','R$ 7.600','R$ 15.100')">Detalhar</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="section-head"><div><h2>ROI por equipe</h2><p>Comparativo de eficiência entre áreas, sem esconder diferenças de custo e contribuição.</p></div></div>
+        <div class="grid grid-4">
+          <div class="card"><span class="kicker">Comercial</span><div class="stat-value">3,2x</div><p>Contribuição: R$ 782 mil</p><div class="progress"><span style="width:88%"></span></div></div>
+          <div class="card"><span class="kicker">Expansão</span><div class="stat-value">2,7x</div><p>Contribuição: R$ 514 mil</p><div class="progress"><span style="width:76%"></span></div></div>
+          <div class="card"><span class="kicker">Operação</span><div class="stat-value">2,3x</div><p>Contribuição: R$ 391 mil</p><div class="progress"><span style="width:66%"></span></div></div>
+          <div class="card"><span class="kicker">Marketing</span><div class="stat-value">1,9x</div><p>Contribuição: R$ 206 mil</p><div class="progress"><span style="width:55%"></span></div></div>
+        </div>
+
+        <div class="section-head"><div><h2>Evolução do ROI</h2><p>Histórico para evitar decisões baseadas em um único mês.</p></div></div>
+        <div class="card">
+          <div style="display:flex;align-items:end;gap:18px;height:190px">
+            <div style="flex:1;text-align:center"><b>2,1x</b><div style="height:78px;background:#2c2c2c;border-radius:8px 8px 2px 2px;margin:8px auto;width:50px"></div><small style="color:#888">Abr</small></div>
+            <div style="flex:1;text-align:center"><b>2,3x</b><div style="height:92px;background:#363636;border-radius:8px 8px 2px 2px;margin:8px auto;width:50px"></div><small style="color:#888">Mai</small></div>
+            <div style="flex:1;text-align:center"><b>2,4x</b><div style="height:101px;background:#4b1b19;border-radius:8px 8px 2px 2px;margin:8px auto;width:50px"></div><small style="color:#888">Jun</small></div>
+            <div style="flex:1;text-align:center"><b>2,6x</b><div style="height:118px;background:#78100c;border-radius:8px 8px 2px 2px;margin:8px auto;width:50px"></div><small style="color:#888">Jul</small></div>
+            <div style="flex:1;text-align:center"><b>2,8x</b><div style="height:140px;background:linear-gradient(180deg,#e10600,#760704);border-radius:8px 8px 2px 2px;margin:8px auto;width:50px"></div><small style="color:#fff">Ago</small></div>
+          </div>
+        </div>
+
+        <div class="section-head"><div><h2>Alertas e oportunidades</h2></div></div>
+        <div class="grid grid-3">
+          <div class="card insight-card"><span class="kicker">Oportunidade</span><h3 style="margin-top:8px">Comercial está 33% acima da meta de ROI</h3><p>Boa referência para entender práticas replicáveis em outras equipes.</p><button class="btn btn-ghost" onclick="toast('Benchmark da equipe Comercial aberto.')">Analisar equipe</button></div>
+          <div class="card insight-card"><span class="kicker">Atenção</span><h3 style="margin-top:8px">Marketing abaixo da meta</h3><p>ROI de 1,9x. Recomenda-se revisar atribuição de resultado e estrutura de custo antes de qualquer conclusão.</p><button class="btn btn-ghost" onclick="toast('Diagnóstico de Marketing aberto.')">Investigar</button></div>
+          <div class="card insight-card"><span class="kicker">Qualidade do dado</span><h3 style="margin-top:8px">8 colaboradores sem resultado atribuível</h3><p>O sistema deve classificar como “não mensurável” em vez de gerar ROI artificial.</p><button class="btn btn-ghost" onclick="toast('Pendências de mensuração abertas.')">Ver pendências</button></div>
+        </div>
+      </section>
+
+      <section class="page" id="page-gamificacao">
+        <div class="section-head">
+          <div><span class="eyebrow">Engajamento</span><h2>Gamificação</h2><p>Pontos, rankings, desafios e reconhecimento conectados a metas, Universidade, treinamentos e participação.</p></div>
+          <button class="btn btn-primary admin-only" onclick="openModal('challengeModal')">+ Novo desafio</button>
+        </div>
+        <div class="grid grid-4">
+          <div class="card"><span class="kicker">Seus pontos</span><div class="stat-value">4.850</div><span class="stat-meta">nível Ouro</span></div>
+          <div class="card"><span class="kicker">Posição</span><div class="stat-value">#7</div><span class="stat-meta">ranking geral</span></div>
+          <div class="card"><span class="kicker">Sequência</span><div class="stat-value">12d</div><span class="stat-meta">atividades consecutivas</span></div>
+          <div class="card"><span class="kicker">Desafios ativos</span><div class="stat-value">3</div><span class="stat-meta">1 termina esta semana</span></div>
+        </div>
+
+        <div class="section-head"><div><h2>Ranking</h2></div></div>
+        <div class="card">
+          <div class="leaderboard-row" style="color:#888;font-size:11px;text-transform:uppercase"><span></span><b>Colaborador</b><b>Pontos</b><b>Nível</b></div>
+          <div class="leaderboard-row"><span class="rank">1</span><strong>Ana Souza</strong><span>7.420</span><span class="status ok">Diamante</span></div>
+          <div class="leaderboard-row"><span class="rank">2</span><strong>Lucas Prado</strong><span>6.980</span><span class="status ok">Diamante</span></div>
+          <div class="leaderboard-row"><span class="rank">3</span><strong>Marina Alves</strong><span>6.510</span><span class="status">Ouro</span></div>
+          <div class="leaderboard-row"><span class="rank">7</span><strong>Você</strong><span>4.850</span><span class="status">Ouro</span></div>
+        </div>
+
+        <div class="section-head"><div><h2>Conquistas</h2></div></div>
+        <div class="badge-grid">
+          <div class="card badge-card"><div class="badge-icon">10</div><h3>10 cursos</h3><p>Concluiu 10 cursos da Universidade 300.</p></div>
+          <div class="card badge-card"><div class="badge-icon">NPS</div><h3>Excelência</h3><p>Alcançou NPS acima de 85 em treinamentos.</p></div>
+          <div class="card badge-card"><div class="badge-icon">100</div><h3>Meta batida</h3><p>Atingiu 100% da meta em uma campanha.</p></div>
+          <div class="card badge-card"><div class="badge-icon">12</div><h3>Consistência</h3><p>12 dias consecutivos de atividade.</p></div>
+        </div>
+      </section>
+
+      <section class="page" id="page-relatorios">
+        <div class="section-head">
+          <div><span class="eyebrow">Inteligência</span><h2>Relatórios</h2><p>Painéis e indicadores gerenciais conectados à operação real do Bússola 300.</p></div>
+        </div>
+        <div class="grid grid-3">
+          <div class="card module-card"><div class="module-icon">◎</div><h3>Metas & Performance</h3><p>Resultados publicados, equipes, funções e metas individuais.</p><button class="btn btn-secondary" onclick="openReportModel('Metas & Performance')">Abrir modelo</button></div>
+          <div class="card module-card restricted-report"><span class="tag red">Restrito</span><div class="module-icon">C</div><h3>Gerencial de Chamados</h3><p>SLA, backlog, primeira resposta, resolução, criticidade e responsáveis.</p><button class="btn btn-secondary" onclick="openRestrictedReport()">Abrir relatório</button></div>
+          <div class="card module-card"><div class="module-icon">P</div><h3>People Analytics</h3><p>Headcount, desempenho, 1:1, treinamentos, custo e evolução por equipe.</p><button class="btn btn-secondary" onclick="openReportModel('People Analytics')">Abrir modelo</button></div>
+          <div class="card module-card"><div class="module-icon">R$</div><h3>ROI por Colaborador</h3><p>Custo total, resultado atribuído, ROI individual e consolidado por equipe.</p><button class="btn btn-secondary" onclick="openReportModel('ROI por Colaborador')">Abrir modelo</button></div>
+          <div class="card module-card"><div class="module-icon">T</div><h3>Treinamentos & NPS</h3><p>Participação, presença, NPS, aderência por equipe e biblioteca histórica.</p><button class="btn btn-secondary" onclick="openReportModel('Treinamentos & NPS')">Abrir modelo</button></div>
+          <div class="card module-card"><div class="module-icon">G</div><h3>Gamificação & Engajamento</h3><p>Pontos, ranking, desafios, conquistas e correlação com performance.</p><button class="btn btn-secondary" onclick="openReportModel('Gamificação & Engajamento')">Abrir modelo</button></div>
+          <div class="card module-card admin-only"><div class="module-icon">↗</div><h3>Looker Studio</h3><p>Painel incorporado com fallback seguro quando o embed não estiver disponível.</p><button class="btn btn-secondary" onclick="toast('Embed simulado: em produção, usar a URL oficial autorizada.')">Abrir painel</button></div>
+        </div>
+
+        <div class="section-head"><div><h2>Modelos prontos</h2><p>Exemplos de dashboards que podem ser conectados à base real do Bússola.</p></div></div>
+        <div class="grid grid-3">
+          <div class="report-preview"><span class="kicker">Executivo</span><h3>Visão Geral 300</h3><div class="mini-bars"><span style="height:42%"></span><span style="height:65%"></span><span style="height:58%"></span><span style="height:82%"></span><span style="height:74%"></span></div><button class="btn btn-ghost" onclick="openReportModel('Visão Geral 300')">Visualizar</button></div>
+          <div class="report-preview"><span class="kicker">Pessoas</span><h3>Desempenho por Equipe</h3><div class="mini-bars"><span style="height:71%"></span><span style="height:88%"></span><span style="height:63%"></span><span style="height:79%"></span><span style="height:91%"></span></div><button class="btn btn-ghost" onclick="openReportModel('Desempenho por Equipe')">Visualizar</button></div>
+          <div class="report-preview"><span class="kicker">Financeiro</span><h3>ROI & Custo Operacional</h3><div class="mini-bars"><span style="height:51%"></span><span style="height:76%"></span><span style="height:84%"></span><span style="height:69%"></span><span style="height:93%"></span></div><button class="btn btn-ghost" onclick="openReportModel('ROI & Custo Operacional')">Visualizar</button></div>
+        </div>
+      </section>
+
+      <section class="page" id="page-admin">
+        <div class="section-head">
+          <div><span class="eyebrow">Administração</span><h2>Administração</h2><p>Configurações sensíveis protegidas por permissão e validação server-side.</p></div>
+        </div>
+        <div class="grid grid-3">
+          <div class="card module-card"><div class="module-icon">U</div><h3>Usuários & Permissões</h3><p>Memberships, access groups, permissões e princípio do menor privilégio.</p><button class="btn btn-secondary" onclick="document.getElementById('permissionMatrix').scrollIntoView({behavior:'smooth'})">Gerenciar</button></div>
+          <div class="card module-card"><div class="module-icon">C</div><h3>Catálogo de Chamados</h3><p>Áreas, subcategorias, responsáveis e visualizadores por ID.</p><button class="btn btn-secondary" onclick="toast('Catálogo de Chamados aberto no protótipo.')">Gerenciar</button></div>
+          <div class="card module-card"><div class="module-icon">S</div><h3>Segurança & Auditoria</h3><p>Logs, sessões, tenants, autorizações e integridade operacional.</p><button class="btn btn-secondary" onclick="toast('Painel de auditoria aberto no protótipo.')">Visualizar</button></div>
+        </div>
+
+        <div class="section-head" id="permissionMatrix"><div><h2>Gerenciamento de acesso por visão</h2><p>Defina quem visualiza, gerencia ou não acessa cada módulo.</p></div><button class="btn btn-primary" onclick="savePermissions()">Salvar permissões</button></div>
+        <div class="card table-wrap perm-table">
+          <table>
+            <thead><tr><th>Módulo</th><th>Student</th><th>Gestor</th><th>Admin</th><th>Grupo específico</th></tr></thead>
+            <tbody>
+              <tr><td>Metas & Performance</td><td><select class="field"><option>Visualizar</option><option>Sem acesso</option></select></td><td><select class="field"><option>Visualizar</option><option>Gerenciar</option></select></td><td><select class="field"><option>Gerenciar</option></select></td><td><input class="field" value="goals.manage"/></td></tr>
+              <tr><td>Treinamentos</td><td><select class="field"><option>Visualizar</option></select></td><td><select class="field"><option>Gerenciar equipe</option><option>Visualizar</option></select></td><td><select class="field"><option>Gerenciar</option></select></td><td><input class="field" value="training.manage"/></td></tr>
+              <tr><td>Gestão de Pessoas</td><td><select class="field"><option>Sem acesso</option><option>Próprio perfil</option></select></td><td><select class="field"><option>Gerenciar equipe</option></select></td><td><select class="field"><option>Gerenciar</option></select></td><td><input class="field" value="people.manage"/></td></tr>
+              <tr><td>Financeiro</td><td><select class="field"><option>Sem acesso</option></select></td><td><select class="field"><option>Visualizar equipe</option><option>Sem acesso</option></select></td><td><select class="field"><option>Gerenciar</option></select></td><td><input class="field" value="finance.roi.view"/></td></tr>
+              <tr><td>Gamificação</td><td><select class="field"><option>Visualizar</option></select></td><td><select class="field"><option>Gerenciar equipe</option></select></td><td><select class="field"><option>Gerenciar</option></select></td><td><input class="field" value="gamification.manage"/></td></tr>
+              <tr><td>Relatórios</td><td><select class="field"><option>Visualizar permitidos</option></select></td><td><select class="field"><option>Visualizar equipe</option></select></td><td><select class="field"><option>Gerenciar</option></select></td><td><input class="field" value="reports.manage"/></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<!-- Modais -->
+<div class="modal" id="ticketModal">
+  <div class="modal-panel">
+    <div class="modal-head"><div><span class="eyebrow">Novo chamado</span><h2 style="margin:4px 0">Como podemos ajudar?</h2></div><button class="icon-btn" onclick="closeModal('ticketModal')">×</button></div>
+    <div class="stepper" id="ticketSteps"><span class="step active"></span><span class="step"></span><span class="step"></span><span class="step"></span><span class="step"></span><span class="step"></span><span class="step"></span></div>
+    <div class="wizard-box">
+      <div class="wizard-stage active" data-stage="0"><h3>1. Área</h3><p>Escolha a área relacionada.</p><div class="option-grid" id="areaOptions"><button class="option" data-value="Marketing">Marketing</button><button class="option" data-value="CRM">CRM</button><button class="option" data-value="OpenS">OpenS</button><button class="option" data-value="Operação Comercial">Operação Comercial</button><button class="option" data-value="Dashboards / BI">Dashboards / BI</button><button class="option" data-value="Comercial">Comercial</button><button class="option" data-value="Treinamentos">Treinamentos</button><button class="option dev-option" data-value="Desenvolvimento">Desenvolvimento</button><button class="option" data-value="Outros">Outros</button></div></div>
+      <div class="wizard-stage" data-stage="1"><h3>2. Motivo</h3><p>Selecione a subcategoria.</p><div class="option-grid" id="reasonOptions"><button class="option">Problemas de acesso</button><button class="option">Dúvidas de utilização</button><button class="option">Solicitação de melhoria</button><button class="option">Erro no sistema</button><button class="option">Outro assunto</button></div></div>
+      <div class="wizard-stage" data-stage="2"><h3>3. Contexto</h3><p>Conte um pouco mais sobre a situação.</p><textarea class="field" id="ticketContext" placeholder="Descreva o que aconteceu, quando começou e o que você já tentou..."></textarea></div>
+      <div class="wizard-stage" data-stage="3"><h3>4. Impacto</h3><p>Qual é o impacto desta situação?</p><textarea class="field" id="impactDesc" placeholder="Explique como isso afeta sua operação..."></textarea><div class="option-grid" style="margin-top:12px" id="impactOptions"><button class="option">Baixo</button><button class="option">Médio</button><button class="option">Alto</button><button class="option">Crítico</button></div></div>
+      <div class="wizard-stage" data-stage="4"><h3>5. Evidências</h3><p>Adicione informações que ajudem na análise.</p><input class="field" style="width:100%;margin-bottom:10px" placeholder="Link relacionado (opcional)" /><input class="field" style="width:100%;margin-bottom:10px" placeholder="Mensagem de erro / protocolo (opcional)" /><div class="card" style="border-style:dashed;text-align:center"><b>Anexos</b><p>Até 5 arquivos, máximo 20 MB cada.</p><button class="btn btn-secondary" onclick="toast('Seletor de arquivos simulado no protótipo.')">Selecionar arquivos</button></div></div>
+      <div class="wizard-stage" data-stage="5"><h3>6. Encaminhamento</h3><p>O Bússola define o responsável automaticamente com base em Área + Motivo.</p><div class="card"><span class="kicker">Roteamento automático</span><h3 style="margin-top:7px" id="routePreview">Responsável será definido pelo sistema</h3><p>O solicitante não escolhe manualmente o responsável.</p></div></div>
+      <div class="wizard-stage" data-stage="6"><h3>7. Revisão</h3><p>Confirme as informações antes de criar.</p><div class="card" id="ticketReview">Revise os dados preenchidos nas etapas anteriores.</div></div>
+    </div>
+    <div class="actions" style="justify-content:space-between;margin-top:18px">
+      <button class="btn btn-ghost" id="ticketBack" onclick="ticketBack()" disabled>Voltar</button>
+      <button class="btn btn-primary" id="ticketNext" onclick="ticketNext()">Continuar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="trainingDetailModal">
+  <div class="modal-panel">
+    <div class="modal-head"><div><span class="eyebrow">Gente & Gestão</span><h2 style="margin:4px 0">Venda Consultiva 300</h2><p style="color:var(--muted)">Presencial · 27/08/2026 · 09:00</p></div><button class="icon-btn" onclick="closeModal('trainingDetailModal')">×</button></div>
+    <div class="tabs" data-tabs="training"><button class="tab active" data-tab="participantes">Participantes</button><button class="tab" data-tab="presenca">Lista de presença</button><button class="tab" data-tab="nps">NPS</button><button class="tab" data-tab="newslink">News</button></div>
+    <div class="tab-panel active" data-panel="participantes"><div class="list"><div class="list-item"><div class="avatar">AS</div><div class="grow"><strong>Ana Souza</strong><small>Comercial</small></div><span class="status ok">Inscrita</span></div><div class="list-item"><div class="avatar">LP</div><div class="grow"><strong>Lucas Prado</strong><small>Expansão</small></div><span class="status ok">Inscrito</span></div></div></div>
+    <div class="tab-panel" data-panel="presenca"><p style="color:var(--muted)">Registre P = Presente, F = Falta e J = Justificada.</p><div class="table-wrap"><table><thead><tr><th>Participante</th><th>Status</th></tr></thead><tbody><tr><td>Ana Souza</td><td><select class="field"><option>P — Presente</option><option>F — Falta</option><option>J — Justificada</option></select></td></tr><tr><td>Lucas Prado</td><td><select class="field"><option>P — Presente</option><option>F — Falta</option><option>J — Justificada</option></select></td></tr></tbody></table></div><button class="btn btn-primary" style="margin-top:15px" onclick="toast('Lista de presença salva e vinculada ao treinamento.')">Salvar presença</button></div>
+    <div class="tab-panel" data-panel="nps"><div class="grid grid-2"><div class="card"><span class="kicker">NPS atual</span><div class="stat-value">86</div></div><div class="card"><span class="kicker">Respostas</span><div class="stat-value">19/22</div></div></div><button class="btn btn-secondary" style="margin-top:14px" onclick="toast('Link de NPS copiado para envio aos participantes.')">Copiar link do NPS</button></div>
+    <div class="tab-panel" data-panel="newslink"><div class="card"><span class="status ok">Vinculado</span><h3 style="margin-top:12px">News: Venda Consultiva 300</h3><p>O treinamento aparece no feed dos usuários autorizados com CTA para inscrição e detalhes.</p><button class="btn btn-secondary" onclick="toast('News vinculado aberto.')">Abrir News vinculado</button></div></div>
+  </div>
+</div>
+
+<div class="modal" id="personModal">
+  <div class="modal-panel">
+    <div class="modal-head"><div><span class="eyebrow">Perfil do colaborador</span><h2 style="margin:4px 0" id="personName">Pessoa</h2><p style="color:var(--muted)" id="personRole">Área</p></div><button class="icon-btn" onclick="closeModal('personModal')">×</button></div>
+    <div class="grid grid-3"><div class="card"><span class="kicker">Trilhas</span><div class="stat-value">78%</div></div><div class="card"><span class="kicker">Treinamentos</span><div class="stat-value">12</div></div><div class="card"><span class="kicker">Compliance</span><div class="stat-value">100%</div></div></div>
+    <div class="section-head"><div><h2>Jornada</h2></div></div>
+    <div class="list"><div class="list-item"><span class="dot"></span><div class="grow"><strong>Onboarding concluído</strong><small>Universidade 300 · 100%</small></div></div><div class="list-item"><span class="dot" style="background:var(--warning)"></span><div class="grow"><strong>Treinamento obrigatório</strong><small>Venda Consultiva · agendado para 27/08</small></div></div><div class="list-item"><span class="dot" style="background:var(--success)"></span><div class="grow"><strong>Documentos em conformidade</strong><small>Sem pendências</small></div></div></div>
+  </div>
+</div>
+
+<div class="modal" id="newsModal"><div class="modal-panel"><div class="modal-head"><div><span class="eyebrow">Publicação</span><h2>Nova News</h2></div><button class="icon-btn" onclick="closeModal('newsModal')">×</button></div><input class="field" style="width:100%;margin:12px 0" placeholder="Título"/><textarea class="field" placeholder="Conteúdo da publicação..."></textarea><div class="grid grid-2" style="margin-top:10px"><select class="field"><option>Sem vínculo</option><option>Vincular a Meta</option><option>Vincular a Treinamento</option><option>Vincular a Material</option></select><input class="field" placeholder="Texto do CTA"/></div><button class="btn btn-primary" style="margin-top:14px" onclick="toast('News publicada no protótipo.');closeModal('newsModal')">Publicar</button></div></div>
+<div class="modal" id="goalModal"><div class="modal-panel"><div class="modal-head"><div><span class="eyebrow">Metas</span><h2>Nova campanha</h2></div><button class="icon-btn" onclick="closeModal('goalModal')">×</button></div><input class="field" style="width:100%;margin:12px 0" placeholder="Nome da campanha"/><div class="grid grid-2"><select class="field"><option>Mensal</option><option>Semanal</option><option>Diária</option><option>Período</option></select><select class="field"><option>Individual</option><option>Equipe</option><option>Função</option></select></div><button class="btn btn-primary" style="margin-top:14px" onclick="toast('Campanha criada no protótipo.');closeModal('goalModal')">Criar campanha</button></div></div>
+<div class="modal" id="trainingModal"><div class="modal-panel"><div class="modal-head"><div><span class="eyebrow">Treinamentos</span><h2>Novo treinamento</h2></div><button class="icon-btn" onclick="closeModal('trainingModal')">×</button></div><input class="field" style="width:100%;margin:12px 0" placeholder="Nome do treinamento"/><div class="grid grid-2"><select class="field"><option>Presencial</option><option>Online</option><option>EAD</option><option>Híbrido</option></select><input class="field" type="date"/></div><label style="display:flex;gap:8px;margin:15px 0;color:#bbb"><input type="checkbox" checked/> Publicar também no News</label><label style="display:flex;gap:8px;margin:15px 0;color:#bbb"><input type="checkbox" checked/> Gerar lista de presença P/F/J</label><label style="display:flex;gap:8px;margin:15px 0;color:#bbb"><input type="checkbox" checked/> Gerar pesquisa NPS vinculada</label><button class="btn btn-primary" onclick="toast('Treinamento criado e vínculos preparados.');closeModal('trainingModal')">Criar treinamento</button></div></div>
+<div class="modal" id="vacancyModal"><div class="modal-panel"><div class="modal-head"><div><span class="eyebrow">Recrutamento</span><h2>Nova vaga</h2></div><button class="icon-btn" onclick="closeModal('vacancyModal')">×</button></div><input class="field" style="width:100%;margin:12px 0" placeholder="Título da vaga"/><div class="grid grid-2"><input class="field" placeholder="Área"/><select class="field"><option>Presencial</option><option>Híbrido</option><option>Remoto</option></select></div><textarea class="field" style="margin-top:10px" placeholder="Descrição da vaga..."></textarea><button class="btn btn-primary" style="margin-top:14px" onclick="toast('Vaga criada no protótipo.');closeModal('vacancyModal')">Criar vaga</button></div></div>
+<div class="modal" id="docModal"><div class="modal-panel"><div class="modal-head"><div><span class="eyebrow">Compliance</span><h2>Novo documento</h2></div><button class="icon-btn" onclick="closeModal('docModal')">×</button></div><input class="field" style="width:100%;margin:12px 0" placeholder="Título do documento"/><div class="grid grid-2"><select class="field"><option>Política</option><option>Termo</option><option>LGPD</option><option>Contrato</option></select><input class="field" placeholder="Versão (ex. 1.0)"/></div><label style="display:flex;gap:8px;margin:15px 0;color:#bbb"><input type="checkbox"/> Exigir aceite dos usuários</label><button class="btn btn-primary" onclick="toast('Documento cadastrado no protótipo.');closeModal('docModal')">Cadastrar</button></div></div>
+<div class="modal" id="materialModal"><div class="modal-panel"><div class="modal-head"><div><span class="eyebrow">Materiais</span><h2>Novo material de venda</h2></div><button class="icon-btn" onclick="closeModal('materialModal')">×</button></div><input class="field" style="width:100%;margin:12px 0" placeholder="Nome do material"/><div class="grid grid-2"><select class="field"><option>Apresentação</option><option>Script</option><option>Playbook</option><option>Case</option></select><input class="field" placeholder="Versão"/></div><button class="btn btn-primary" style="margin-top:14px" onclick="toast('Material publicado no protótipo.');closeModal('materialModal')">Publicar material</button></div></div>
+
+
+<div class="modal" id="oneOneModal"><div class="modal-panel"><div class="modal-head"><div><span class="eyebrow">Desempenho</span><h2>Registrar 1:1</h2></div><button class="icon-btn" onclick="closeModal('oneOneModal')">×</button></div><div class="grid grid-2" style="margin-top:12px"><select class="field"><option>Ana Souza</option><option>Lucas Prado</option><option>Marina Alves</option></select><input class="field" type="date"/></div><textarea class="field" style="margin-top:10px" placeholder="Pontos positivos, desafios, combinados e próximos passos..."></textarea><div class="score-grid" style="margin-top:12px"><button class="score-btn">1</button><button class="score-btn">2</button><button class="score-btn selected">3</button><button class="score-btn">4</button><button class="score-btn">5</button></div><button class="btn btn-primary" style="margin-top:14px" onclick="toast('Registro de 1:1 salvo no protótipo.');closeModal('oneOneModal')">Salvar 1:1</button></div></div>
+<div class="modal" id="roiModal"><div class="modal-panel"><div class="modal-head"><div><span class="eyebrow">Financeiro</span><h2>Configurar cálculo de ROI</h2></div><button class="icon-btn" onclick="closeModal('roiModal')">×</button></div><p style="color:var(--muted)">Defina a regra oficial para evitar comparações inconsistentes entre equipes.</p>
+<div class="grid grid-2">
+  <div class="card"><span class="kicker">Componentes de custo</span>
+    <label style="display:flex;gap:8px;margin:12px 0"><input type="checkbox" checked> Salário + encargos</label>
+    <label style="display:flex;gap:8px;margin:12px 0"><input type="checkbox" checked> Benefícios</label>
+    <label style="display:flex;gap:8px;margin:12px 0"><input type="checkbox" checked> Variável / bônus</label>
+    <label style="display:flex;gap:8px;margin:12px 0"><input type="checkbox" checked> Rateio de custo operacional</label>
+  </div>
+  <div class="card"><span class="kicker">Resultado</span>
+    <label style="display:flex;gap:8px;margin:12px 0"><input type="radio" name="roiresult" checked> Resultado líquido atribuível</label>
+    <label style="display:flex;gap:8px;margin:12px 0"><input type="radio" name="roiresult"> Margem de contribuição</label>
+    <label style="display:flex;gap:8px;margin:12px 0"><input type="radio" name="roiresult"> Receita bruta atribuída</label>
+    <p style="font-size:11px;color:#888">Recomendado: resultado líquido atribuível.</p>
+  </div>
+</div>
+<div class="grid grid-2" style="margin-top:12px">
+  <input class="field" value="2.4" placeholder="Meta mínima de ROI"/>
+  <select class="field"><option>Mensal</option><option>Trimestral</option><option>Semestral</option></select>
+</div>
+<label style="display:flex;gap:8px;margin:15px 0"><input type="checkbox" checked> Marcar como “não mensurável” quando não houver resultado atribuível confiável</label>
+<button class="btn btn-primary" onclick="toast('Regra oficial de ROI salva no protótipo.');closeModal('roiModal')">Salvar regra</button></div></div>
+<div class="modal" id="challengeModal"><div class="modal-panel"><div class="modal-head"><div><span class="eyebrow">Gamificação</span><h2>Novo desafio</h2></div><button class="icon-btn" onclick="closeModal('challengeModal')">×</button></div><input class="field" style="width:100%;margin:12px 0" placeholder="Nome do desafio"/><div class="grid grid-2"><select class="field"><option>Meta</option><option>Curso</option><option>Treinamento</option><option>Engajamento</option></select><input class="field" type="number" placeholder="Pontos"/></div><textarea class="field" style="margin-top:10px" placeholder="Critério para conclusão..."></textarea><button class="btn btn-primary" style="margin-top:14px" onclick="toast('Desafio criado no protótipo.');closeModal('challengeModal')">Criar desafio</button></div></div>
+<div class="modal" id="reportModal"><div class="modal-panel"><div class="modal-head"><div><span class="eyebrow">Relatório modelo</span><h2 id="reportModelTitle">Relatório</h2></div><button class="icon-btn" onclick="closeModal('reportModal')">×</button></div><div class="grid grid-3" style="margin-top:14px"><div class="card"><span class="kicker">Indicador A</span><div class="stat-value">84%</div></div><div class="card"><span class="kicker">Indicador B</span><div class="stat-value">2,8x</div></div><div class="card"><span class="kicker">Indicador C</span><div class="stat-value">4,4</div></div></div><div class="report-preview" style="margin-top:14px"><h3>Prévia do dashboard</h3><div class="mini-bars"><span style="height:48%"></span><span style="height:72%"></span><span style="height:60%"></span><span style="height:87%"></span><span style="height:76%"></span><span style="height:92%"></span></div></div><div class="actions" style="margin-top:14px"><button class="btn btn-secondary" onclick="toast('Filtro aplicado no modelo.')">Aplicar filtros</button><button class="btn btn-primary" onclick="toast('Relatório exportado no protótipo.')">Exportar</button></div></div></div>
+
+
+<div class="modal" id="adpDetailModal">
+  <div class="modal-panel">
+    <div class="modal-head">
+      <div><span class="eyebrow">ADP individual</span><h2 id="adpPersonName">Colaborador</h2><p id="adpPersonTeam" style="color:var(--muted)">Equipe</p></div>
+      <button class="icon-btn" onclick="closeModal('adpDetailModal')">×</button>
+    </div>
+    <div class="grid grid-3">
+      <div class="card"><span class="source-badge source-results">Resultados</span><div class="stat-value">4,6</div><span class="stat-meta">sincronizado</span></div>
+      <div class="card"><span class="source-badge source-crm">CRM</span><div class="stat-value">4,4</div><span class="stat-meta">sincronizado</span></div>
+      <div class="card"><span class="source-badge source-manual">Manual</span><div class="stat-value">4,8</div><span class="stat-meta">último preenchimento</span></div>
+    </div>
+    <div class="section-head"><div><h2>Campos manuais</h2></div></div>
+    <div class="list">
+      <div class="list-item"><div class="grow"><strong>Critério comportamental</strong><small>Alimentação manual · Gestor</small></div><select class="field adp-editable"><option>5 — Excelente</option><option>4 — Muito bom</option><option>3 — Adequado</option><option>2 — A desenvolver</option><option>1 — Crítico</option></select></div>
+      <div class="list-item"><div class="grow"><strong>Plano de desenvolvimento</strong><small>Alimentação manual · G&G / Gestor</small></div><button class="btn btn-secondary adp-editable" onclick="openModal('adpPdiModal')">Editar PDI</button></div>
+      <div class="list-item"><div class="grow"><strong>Observação do ciclo</strong><small>Alimentação manual</small></div><textarea class="field adp-editable" style="max-width:330px;min-height:75px" placeholder="Registrar observações..."></textarea></div>
+    </div>
+    <div class="actions" style="margin-top:16px"><button class="btn btn-primary adp-editable" onclick="saveADP()">Salvar ADP</button><button class="btn btn-secondary" onclick="toast('Histórico do ADP aberto.')">Ver histórico</button></div>
+  </div>
+</div>
+
+<div class="modal" id="adpImportModal">
+  <div class="modal-panel">
+    <div class="modal-head"><div><span class="eyebrow">Carga inicial</span><h2>Importar planilha para o ADP</h2></div><button class="icon-btn" onclick="closeModal('adpImportModal')">×</button></div>
+    <p style="color:var(--muted)">A planilha deve ser tratada como carga/mapeamento. O Bússola guarda os dados do ADP de forma estruturada.</p>
+    <div class="card" style="border-style:dashed;text-align:center;margin:14px 0">
+      <b>Arquivo CSV da planilha</b>
+      <p>Exporte a aba do Google Sheets como CSV para testar a carga neste protótipo.</p>
+      <input type="file" id="adpCsvFile" accept=".csv,text/csv" class="field" style="max-width:100%" />
+    </div>
+    <div id="adpImportPreview" class="empty">Nenhum arquivo carregado.</div>
+    <div class="actions" style="margin-top:14px">
+      <button class="btn btn-secondary" onclick="parseADPCsv()">Pré-visualizar</button>
+      <button class="btn btn-primary" onclick="confirmADPImport()">Importar para ADP</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="adpCycleModal">
+  <div class="modal-panel">
+    <div class="modal-head"><div><span class="eyebrow">Ciclo ADP</span><h2>Novo ciclo</h2></div><button class="icon-btn" onclick="closeModal('adpCycleModal')">×</button></div>
+    <input class="field" style="width:100%;margin:12px 0" placeholder="Nome do ciclo, ex.: ADP Setembro 2026" />
+    <div class="grid grid-2"><input class="field" type="date" /><input class="field" type="date" /></div>
+    <button class="btn btn-primary" style="margin-top:14px" onclick="toast('Novo ciclo ADP criado no protótipo.');closeModal('adpCycleModal')">Criar ciclo</button>
+  </div>
+</div>
+
+<div class="modal" id="adpManualFieldModal">
+  <div class="modal-panel">
+    <div class="modal-head"><div><span class="eyebrow">Configuração ADP</span><h2>Campo de alimentação manual</h2></div><button class="icon-btn" onclick="closeModal('adpManualFieldModal')">×</button></div>
+    <input class="field" style="width:100%;margin:12px 0" placeholder="Nome do campo" value="Critério comportamental" />
+    <div class="grid grid-2">
+      <select class="field"><option>Nota 1 a 5</option><option>Texto</option><option>Percentual</option><option>Sim / Não</option><option>Data</option><option>Lista de opções</option></select>
+      <select class="field"><option>Gestor</option><option>Gente & Gestão</option><option>Gestor + G&G</option><option>Colaborador</option></select>
+    </div>
+    <label style="display:flex;gap:8px;margin:15px 0;color:#bbb"><input type="checkbox" checked /> Campo obrigatório</label>
+    <button class="btn btn-primary" onclick="toast('Configuração do campo manual salva.');closeModal('adpManualFieldModal')">Salvar campo</button>
+  </div>
+</div>
+
+<div class="modal" id="adpPdiModal">
+  <div class="modal-panel">
+    <div class="modal-head"><div><span class="eyebrow">ADP</span><h2>Plano de desenvolvimento</h2></div><button class="icon-btn" onclick="closeModal('adpPdiModal')">×</button></div>
+    <textarea class="field" placeholder="Objetivo de desenvolvimento..."></textarea>
+    <textarea class="field" style="margin-top:10px" placeholder="Ações combinadas..."></textarea>
+    <div class="grid grid-2" style="margin-top:10px"><input class="field" type="date" /><select class="field"><option>Em andamento</option><option>Não iniciado</option><option>Concluído</option></select></div>
+    <button class="btn btn-primary" style="margin-top:14px" onclick="toast('PDI salvo no ADP.');closeModal('adpPdiModal')">Salvar PDI</button>
+  </div>
+</div>
+
+
+<div class="modal" id="roiDetailModal">
+  <div class="modal-panel">
+    <div class="modal-head">
+      <div><span class="eyebrow">ROI individual</span><h2 id="roiDetailName">Colaborador</h2><p id="roiDetailTeam" style="color:var(--muted)">Equipe</p></div>
+      <button class="icon-btn" onclick="closeModal('roiDetailModal')">×</button>
+    </div>
+    <div class="grid grid-3" style="margin-top:14px">
+      <div class="card"><span class="kicker">Custo total</span><div class="stat-value" id="roiDetailCost">R$ 0</div></div>
+      <div class="card"><span class="kicker">Resultado líquido</span><div class="stat-value" id="roiDetailResult">R$ 0</div></div>
+      <div class="card"><span class="kicker">ROI</span><div class="stat-value" id="roiDetailValue">0x</div></div>
+    </div>
+    <div class="section-head"><div><h2>Detalhamento</h2></div></div>
+    <div class="grid grid-2">
+      <div class="card">
+        <div class="roi-row"><strong>Salário + encargos</strong><span>R$ 6.760</span><span>76%</span></div>
+        <div class="roi-row"><strong>Benefícios</strong><span>R$ 780</span><span>9%</span></div>
+        <div class="roi-row"><strong>Variável</strong><span>R$ 610</span><span>7%</span></div>
+        <div class="roi-row"><strong>Rateio operacional</strong><span>R$ 750</span><span>8%</span></div>
+      </div>
+      <div class="card">
+        <span class="kicker">Origem do resultado</span>
+        <div class="list" style="margin-top:12px">
+          <div class="list-item"><div class="grow"><strong>Vendas / receita atribuída</strong><small>Fonte: CRM / Resultados</small></div><span>R$ 42.000</span></div>
+          <div class="list-item"><div class="grow"><strong>Custos variáveis</strong><small>Comissões, mídia, taxas ou outros</small></div><span>-R$ 10.800</span></div>
+          <div class="list-item"><div class="grow"><strong>Resultado líquido atribuível</strong><small>Base efetiva do ROI</small></div><span><b>R$ 31.200</b></span></div>
+        </div>
+      </div>
+    </div>
+    <div class="actions" style="margin-top:16px"><button class="btn btn-secondary" onclick="toast('Histórico de ROI aberto.')">Ver histórico</button><button class="btn btn-primary" onclick="toast('Memória de cálculo exportada.')">Exportar memória de cálculo</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const state = { role:'admin', ticketStage:0, area:'', reason:'', impact:'' };
+
+  function showPage(page){
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    const target=document.getElementById('page-'+page);
+    if(target) target.classList.add('active');
+    document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.page===page));
+    const btn=[...document.querySelectorAll('.nav-btn')].find(b=>b.dataset.page===page);
+    document.getElementById('crumb').textContent=btn?btn.textContent.trim():'Início';
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('overlay').classList.remove('open');
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+  document.querySelectorAll('.nav-btn').forEach(btn=>btn.addEventListener('click',()=>showPage(btn.dataset.page)));
+  document.querySelectorAll('.go').forEach(btn=>btn.addEventListener('click',e=>{e.preventDefault();showPage(btn.dataset.go)}));
+
+  document.getElementById('menuBtn').onclick=()=>{document.getElementById('sidebar').classList.add('open');document.getElementById('overlay').classList.add('open')};
+  document.getElementById('overlay').onclick=()=>{document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('open')};
+
+  function applyRole(){
+    const role=state.role;
+    const admin=role==='admin';
+    document.querySelectorAll('.admin-only').forEach(el=>el.style.display=admin?'':'none');
+    document.querySelectorAll('.ticket-move').forEach(el=>el.style.display=role==='assignee'?'':'none');
+    document.querySelectorAll('.dev-option').forEach(el=>el.style.display=admin?'':'none');
+    document.querySelectorAll('.restricted-report').forEach(el=>el.style.display=(admin?'':'none'));
+    document.getElementById('profileRole').textContent={
+      admin:'Administrador',student:'Usuário / Student',assignee:'Responsável por Chamado',viewer:'Viewer'
+    }[role];
+    if(!admin && document.getElementById('page-admin').classList.contains('active')) showPage('inicio');
+  }
+  document.getElementById('roleSelect').addEventListener('change',e=>{state.role=e.target.value;applyRole();toast('Perfil de visualização alterado para: '+e.target.options[e.target.selectedIndex].text)});
+  applyRole();
+
+  document.querySelectorAll('[data-tabs]').forEach(group=>{
+    group.querySelectorAll('.tab').forEach(tab=>{
+      tab.addEventListener('click',()=>{
+        const container=group.parentElement;
+        group.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+        tab.classList.add('active');
+        container.querySelectorAll(':scope > .tab-panel').forEach(p=>p.classList.remove('active'));
+        const p=container.querySelector(':scope > [data-panel="'+tab.dataset.tab+'"]');
+        if(p) p.classList.add('active');
+      });
+    });
+  });
+
+  document.querySelectorAll('.option-grid').forEach(grid=>{
+    grid.addEventListener('click',e=>{
+      const btn=e.target.closest('.option'); if(!btn)return;
+      [...grid.querySelectorAll('.option')].forEach(x=>x.classList.remove('selected'));
+      btn.classList.add('selected');
+      if(grid.id==='areaOptions') state.area=btn.dataset.value||btn.textContent.trim();
+      if(grid.id==='reasonOptions') state.reason=btn.textContent.trim();
+      if(grid.id==='impactOptions') state.impact=btn.textContent.trim();
+    });
+  });
+
+  function openModal(id){document.getElementById(id).classList.add('open')}
+  function closeModal(id){document.getElementById(id).classList.remove('open')}
+  document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open')}));
+
+  function toast(msg){
+    const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+    clearTimeout(window.__toast);window.__toast=setTimeout(()=>t.classList.remove('show'),3000);
+  }
+  document.getElementById('notifyBtn').onclick=()=>toast('Você tem 4 notificações novas.');
+  document.getElementById('helpBtn').onclick=()=>toast('Central de ajuda do Bússola 300 — protótipo navegável.');
+
+  function renderTicketStage(){
+    document.querySelectorAll('.wizard-stage').forEach((s,i)=>s.classList.toggle('active',i===state.ticketStage));
+    document.querySelectorAll('#ticketSteps .step').forEach((s,i)=>s.classList.toggle('active',i<=state.ticketStage));
+    document.getElementById('ticketBack').disabled=state.ticketStage===0;
+    document.getElementById('ticketNext').textContent=state.ticketStage===6?'Criar chamado':'Continuar';
+    if(state.ticketStage===5){
+      const map={
+        'CRM':'Isabella','OpenS':'Isabella','Operação Comercial':'Eloise / Mauricio conforme subcategoria',
+        'Dashboards / BI':'Isabella / Eloise conforme subcategoria','Comercial':'Eloise',
+        'Treinamentos':'Isabella / Eloise / Vinicius conforme tema','Outros':'Isabella / Eloise',
+        'Marketing':'Maira','Desenvolvimento':'Acesso restrito'
+      };
+      document.getElementById('routePreview').textContent=(map[state.area]||'Responsável definido pela regra ativa')+' · viewer padrão conforme configuração';
+    }
+    if(state.ticketStage===6){
+      document.getElementById('ticketReview').innerHTML='<b>Área:</b> '+(state.area||'—')+'<br><b>Motivo:</b> '+(state.reason||'—')+'<br><b>Contexto:</b> '+(document.getElementById('ticketContext').value||'—')+'<br><b>Impacto:</b> '+(state.impact||'—')+'<br><br><span style="color:#8d8d8d">O responsável será atribuído automaticamente pelo backend conforme Área + Subcategoria.</span>';
+    }
+  }
+  function ticketNext(){
+    if(state.ticketStage===0 && !state.area){toast('Selecione uma área para continuar.');return}
+    if(state.ticketStage===1 && !state.reason){toast('Selecione um motivo.');return}
+    if(state.ticketStage===2 && !document.getElementById('ticketContext').value.trim()){toast('O contexto é obrigatório.');return}
+    if(state.ticketStage===3 && (!document.getElementById('impactDesc').value.trim() || !state.impact)){toast('Informe a descrição e o nível de impacto.');return}
+    if(state.ticketStage===6){toast('Chamado #1048 criado e encaminhado automaticamente.');closeModal('ticketModal');state.ticketStage=0;renderTicketStage();return}
+    state.ticketStage++;renderTicketStage();
+  }
+  function ticketBack(){if(state.ticketStage>0){state.ticketStage--;renderTicketStage()}}
+  renderTicketStage();
+
+  function moveTicket(){
+    if(state.role!=='assignee'){toast('Somente o responsável atual pode movimentar este chamado.');return}
+    toast('Status alterado e persistido pelo responsável atual.');
+  }
+  function openRestrictedReport(){
+    if(state.role!=='admin'){toast('Acesso restrito aos usuários autorizados.');return}
+    toast('Relatório gerencial carregado com dados reais de Chamados — simulação.');
+  }
+  function openTraining(){openModal('trainingDetailModal')}
+  function openPerson(name,role){document.getElementById('personName').textContent=name;document.getElementById('personRole').textContent=role;openModal('personModal')}
+
+  document.getElementById('peopleSearch').addEventListener('input',e=>{
+    const q=e.target.value.toLowerCase();
+    document.querySelectorAll('#peopleGrid [data-person]').forEach(c=>c.style.display=c.dataset.person.toLowerCase().includes(q)?'':'none');
+  });
+
+  let selectedTrainingScore = 0;
+  document.querySelectorAll('#trainingScores .score-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('#trainingScores .score-btn').forEach(b=>b.classList.remove('selected'));
+      btn.classList.add('selected');
+      selectedTrainingScore = Number(btn.textContent);
+    });
+  });
+  function submitTrainingEvaluation(){
+    if(!selectedTrainingScore){toast('Selecione uma nota de 1 a 5.');return}
+    toast('Avaliação enviada. Obrigado pelo feedback.');
+    document.getElementById('trainingFeedback').value='';
+    document.querySelectorAll('#trainingScores .score-btn').forEach(b=>b.classList.remove('selected'));
+    selectedTrainingScore=0;
+  }
+
+  document.getElementById('trainingLibrarySearch')?.addEventListener('input',e=>{
+    const q=e.target.value.toLowerCase();
+    document.querySelectorAll('#trainingLibrary [data-training]').forEach(i=>i.style.display=i.dataset.training.toLowerCase().includes(q)?'':'none');
+  });
+
+  function loadPeopleTraining(){
+    const name=document.getElementById('peopleTrainingSelect').value;
+    toast('Lista de presença carregada para: '+name);
+  }
+
+  let activeBrand='all';
+  function filterMaterials(){
+    const q=(document.getElementById('materialSearch')?.value||'').toLowerCase();
+    const type=document.getElementById('materialType')?.value||'all';
+    document.querySelectorAll('.material-item').forEach(item=>{
+      const brandOk=activeBrand==='all'||item.dataset.brand===activeBrand;
+      const typeOk=type==='all'||item.dataset.type===type;
+      const textOk=item.dataset.title.toLowerCase().includes(q);
+      item.style.display=(brandOk&&typeOk&&textOk)?'':'none';
+    });
+  }
+  document.querySelectorAll('#brandFilter .brand-chip').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('#brandFilter .brand-chip').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      activeBrand=btn.dataset.brand;
+      filterMaterials();
+    });
+  });
+  document.getElementById('materialSearch')?.addEventListener('input',filterMaterials);
+  document.getElementById('materialType')?.addEventListener('change',filterMaterials);
+
+  function openReportModel(name){
+    document.getElementById('reportModelTitle').textContent=name;
+    openModal('reportModal');
+  }
+  function savePermissions(){toast('Permissões salvas no protótipo. Em produção, validar também no backend.');}
+
+  // Torna botões genéricos sem ação explícita interativos no protótipo.
+  document.querySelectorAll('button').forEach(btn=>{
+    const hasInline=btn.getAttribute('onclick');
+    const hasData=btn.dataset.page||btn.dataset.go||btn.classList.contains('tab')||btn.classList.contains('option')||btn.id;
+    if(!hasInline && !hasData){
+      btn.addEventListener('click',()=>toast('Ação disponível no protótipo.'));
+    }
+  });
+
+
+  function openADP(name,team,score){
+    document.getElementById('adpPersonName').textContent=name+' · '+score;
+    document.getElementById('adpPersonTeam').textContent=team;
+    openModal('adpDetailModal');
+  }
+  function saveADP(){toast('ADP salvo com usuário, data e histórico de alteração.');closeModal('adpDetailModal');}
+
+  function filterADP(){
+    const q=(document.getElementById('adpSearch')?.value||'').toLowerCase();
+    const status=document.getElementById('adpStatusFilter')?.value||'all';
+    document.querySelectorAll('#adpTable tbody tr').forEach(row=>{
+      const txt=row.dataset.adp.toLowerCase();
+      const okText=txt.includes(q);
+      const okStatus=status==='all'||row.dataset.adp.includes(status);
+      row.style.display=(okText&&okStatus)?'':'none';
+    });
+  }
+  document.getElementById('adpSearch')?.addEventListener('input',filterADP);
+  document.getElementById('adpStatusFilter')?.addEventListener('change',filterADP);
+
+  let adpCsvRows=[];
+  function parseCSVLine(line){
+    const out=[]; let cur=''; let quoted=false;
+    for(let i=0;i<line.length;i++){
+      const c=line[i];
+      if(c==='"'){
+        if(quoted && line[i+1]==='"'){cur+='"';i++;}
+        else quoted=!quoted;
+      } else if(c===',' && !quoted){out.push(cur);cur='';}
+      else cur+=c;
+    }
+    out.push(cur); return out;
+  }
+  function parseADPCsv(){
+    const input=document.getElementById('adpCsvFile');
+    if(!input.files?.length){toast('Selecione um arquivo CSV.');return}
+    const reader=new FileReader();
+    reader.onload=e=>{
+      const text=String(e.target.result||'');
+      const lines=text.split(/\r?\n/).filter(x=>x.trim()).slice(0,15);
+      adpCsvRows=lines.map(parseCSVLine);
+      if(!adpCsvRows.length){toast('O CSV está vazio.');return}
+      const head=adpCsvRows[0];
+      const sample=adpCsvRows.slice(1,6);
+      let table='<div class="table-wrap"><table><thead><tr>'+head.map(h=>'<th>'+escapeHtml(h)+'</th>').join('')+'</tr></thead><tbody>';
+      table+=sample.map(r=>'<tr>'+head.map((_,i)=>'<td>'+escapeHtml(r[i]||'')+'</td>').join('')+'</tr>').join('');
+      table+='</tbody></table></div>';
+      document.getElementById('adpImportPreview').innerHTML=table;
+      toast('Prévia carregada. Próximo passo: mapear cada coluna para Resultados, CRM ou Manual.');
+    };
+    reader.readAsText(input.files[0], 'UTF-8');
+  }
+  function escapeHtml(v){
+    return String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+  }
+  function confirmADPImport(){
+    if(!adpCsvRows.length){toast('Faça a pré-visualização antes de importar.');return}
+    toast('Carga simulada concluída. No sistema real, os campos devem ser validados e gravados no banco do ADP.');
+    closeModal('adpImportModal');
+  }
+
+
+  function refreshAdpVisibility(){
+    const cycle=document.getElementById('adpCycleView')?.value||'';
+    const team=document.getElementById('adpTeamView')?.value||'';
+    toast('Visão atualizada: '+cycle+' · '+team);
+  }
+
+
+  function refreshROI(){
+    const p=document.getElementById('roiPeriod')?.value||'';
+    const t=document.getElementById('roiTeam')?.value||'';
+    const v=document.getElementById('roiView')?.value||'';
+    toast('ROI atualizado: '+p+' · '+t+' · '+v);
+  }
+  function openROIDetail(name,team,roi,cost,result){
+    document.getElementById('roiDetailName').textContent=name;
+    document.getElementById('roiDetailTeam').textContent=team;
+    document.getElementById('roiDetailValue').textContent=roi;
+    document.getElementById('roiDetailCost').textContent=cost;
+    document.getElementById('roiDetailResult').textContent=result;
+    openModal('roiDetailModal');
+  }
+
+</script>
+</body>
+</html>
