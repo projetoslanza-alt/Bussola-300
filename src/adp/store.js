@@ -80,10 +80,13 @@ async function importAdp(client, buffer, filename, userId, { force = false } = {
     }
     if (person.status === "pending") {
       const candidateIds = person.candidates.map((key) => idByKey.get(key)).filter(Boolean);
-      await client.query(
-        `INSERT INTO person_reconciliations (raw_name, alias_key, candidate_ids) VALUES ($1, $2, $3)`,
-        [person.display, person.key, candidateIds]
-      );
+      const pending = await client.query(`SELECT 1 FROM person_reconciliations WHERE alias_key = $1 AND status = 'pending' LIMIT 1`, [person.key]);
+      if (!pending.rowCount) {
+        await client.query(
+          `INSERT INTO person_reconciliations (raw_name, alias_key, candidate_ids) VALUES ($1, $2, $3)`,
+          [person.display, person.key, candidateIds]
+        );
+      }
     }
   }
   const teamIds = new Map();
@@ -121,6 +124,12 @@ async function importAdp(client, buffer, filename, userId, { force = false } = {
   const current = await client.query(`SELECT id FROM adp_cycles WHERE is_current`);
   if (!current.rowCount) {
     await client.query(`UPDATE adp_cycles SET is_current = true WHERE id = (SELECT id FROM adp_cycles ORDER BY ends_on DESC NULLS LAST LIMIT 1)`);
+  }
+
+  const cycleIdList = [...cycleIds.values()];
+  if (cycleIdList.length) {
+    await client.query(`DELETE FROM adp_facts WHERE cycle_id = ANY($1::uuid[])`, [cycleIdList]);
+    await client.query(`DELETE FROM cycle_memberships WHERE cycle_id = ANY($1::uuid[])`, [cycleIdList]);
   }
 
   let created = 0;

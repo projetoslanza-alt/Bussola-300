@@ -2,7 +2,9 @@
 
 O catálogo inicial vem de `catalogo_chamados_300.xlsx`, abas `Validação`, `Escala SLA` e `Regras de uso`.
 
-Motivo sem código, tipo, SLA ou dono é importado com UUID e `catalog_code` nulo. A administração mostra `Configuração pendente` e os campos faltantes. O sistema não completa códigos.
+A célula `Total de motivos` da planilha declara 48. A grade principal tem 43 motivos e a seção Comercial, com colunas deslocadas, tem mais 7 tipos. O cabeçalho `Tipo de chamado` não é motivo. O parser importa os 50 títulos e registra a diferença; não cria nem apaga linhas para forçar 48.
+
+Motivo sem código, tipo, SLA ou dono é importado com UUID, `catalog_code` nulo e `config_pending`. A administração mostra `Configuração pendente` e os campos faltantes. O sistema não completa códigos. Linha incompleta não é descartada por falta de código, dono ou SLA.
 
 A prioridade final é a mais crítica entre o SLA padrão do motivo e a matriz impacto × urgência. A matriz não reduz uma prioridade padrão mais crítica.
 

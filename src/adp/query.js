@@ -165,6 +165,7 @@ async function teamsView(db, cycleId) {
             SUM(CASE WHEN f.metric_code = 'onlines' THEN f.value END)::float AS onlines,
             SUM(CASE WHEN f.metric_code = 'calls_agendadas' THEN f.value END)::float AS calls_agendadas,
             SUM(CASE WHEN f.metric_code = 'calls_realizadas' THEN f.value END)::float AS calls_realizadas,
+            SUM(CASE WHEN f.metric_code = 'teste_vocacional' THEN f.value END)::float AS teste_vocacional,
             SUM(CASE WHEN f.metric_code = 'vendas' THEN f.value END)::float AS vendas
      FROM teams t
      LEFT JOIN adp_facts f ON f.team_id = t.id AND f.cycle_id = $1 AND f.grain = 'consolidado_equipe_total'

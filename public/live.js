@@ -140,7 +140,7 @@
       const conversion = step.conversion == null ? "Sem base para cálculo" : pct(step.conversion);
       return `<div class="funnel-step"><strong>${esc(step.label)}</strong><span>${num(step.value)}</span><span>${conversion}${step.reference == null ? "" : ` · mín. ${pct(step.reference)}`} ${flag}</span></div>`;
     }).join("");
-    const teamCards = teams.map((team) => `<button class="card" data-team="${team.id}" style="text-align:left"><span class="kicker">${esc(team.name)}</span><div class="stat-value">${num(team.vendas)}</div><p>${num(team.people)} pessoas · ${num(team.ligacoes)} ligações · ${num(team.vendas)} vendas</p></button>`).join("") || `<p>Nenhuma equipe neste ciclo.</p>`;
+    const teamCards = teams.map((team) => `<button class="card" data-team="${team.id}" style="text-align:left"><span class="kicker">${esc(team.name)}</span><div class="stat-value">${team.ligacoes == null ? "—" : num(team.vendas)}</div><p>${team.ligacoes == null ? "Sem consolidado neste ciclo" : `${num(team.people)} pessoas · ${num(team.ligacoes)} ligações · ${num(team.vendas)} vendas`}</p></button>`).join("") || `<p>Nenhuma equipe neste ciclo.</p>`;
     const projections = (data.projections || []).map((item) => `<tr><td>${esc(item.label)}</td><td>${pct(item.value)}</td></tr>`).join("");
     const insights = (data.insights || []).map((item) => `<li>${esc(item.text)}</li>`).join("") || "<li>Nenhum insight para este recorte.</li>";
     root.innerHTML = `

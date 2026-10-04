@@ -9,7 +9,18 @@ const { addBusinessMinutes } = require("../src/tickets/businessTime");
 
 test("catálogo importa motivos reais e não inventa código", () => {
   const parsed = parseCatalog(fs.readFileSync(path.join(__dirname, "..", "catalogo_chamados_300.xlsx")));
-  assert.ok(parsed.reasons.length >= 40);
+  assert.equal(parsed.reasons.length, 50);
+  assert.equal(parsed.meta.declaredTotal, 48);
+  assert.equal(parsed.reasons.some((reason) => reason.title === "Tipo de chamado"), false);
+  const commercial = ["Ação Comercial", "Ação Corretiva Comercial", "Ajuste de Processo Comercial", "Atualização de Script", "Atualização de DRS", "Atualização de Material Comercial", "Atualização de D7"];
+  for (const title of commercial) {
+    const reason = parsed.reasons.find((item) => item.title === title);
+    assert.ok(reason, title);
+    assert.equal(reason.area, "Comercial");
+    assert.equal(reason.code, null);
+    assert.equal(reason.configPending, true);
+  }
+  assert.equal(parsed.audit.find((row) => row.sourceRow === 52).imported, false);
   assert.ok(parsed.reasons.some((reason) => reason.code === "RH2" && reason.isRestricted));
   assert.ok(parsed.reasons.some((reason) => reason.code == null && reason.configPending));
   assert.deepEqual(parsed.policies.map((policy) => policy.code).sort(), ["P1", "P2", "P3", "P4"]);

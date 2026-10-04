@@ -75,16 +75,6 @@ function teamToken(title) {
   return canonicalTeam(text) || canonicalTeam(text.replace(/\./g, ""));
 }
 
-function weekParts(title) {
-  const folded = fold(title).replace(/Á/g, "A");
-  const match = folded.match(/^(\d{2})(\d{2})\s*A\s*(\d{2})(\d{2})$/);
-  if (!match) return null;
-  return {
-    startDay: Number(match[1]), startMonth: Number(match[2]),
-    endDay: Number(match[3]), endMonth: Number(match[4])
-  };
-}
-
 function headerMap(rows, start) {
   const map = {};
   for (const offset of [0, 1]) {
@@ -111,13 +101,25 @@ function readMetric(cell, warnings, sheet) {
   return parsed.skip ? null : parsed.value;
 }
 
+function isStructuralLabel(value) {
+  const folded = fold(value);
+  return !folded || folded === "NOME" || folded.startsWith("TOTAL") || folded.startsWith("CONVERS") || folded.startsWith("MEDIA") || folded.startsWith("PROJE") || folded.startsWith("GAP");
+}
+
 function isPersonName(value) {
   const text = cleanName(value);
   const folded = fold(text);
-  if (!text || text === "-" || folded.startsWith("TOTAL") || folded === "NOME") return false;
+  if (!text || text === "-" || isStructuralLabel(text)) return false;
   if (["SEGUNDA", "TERCA", "QUARTA", "QUINTA", "SEXTA", "SABADO", "DOMINGO"].includes(folded)) return false;
   if (metricCode(text) || canonicalTeam(text)) return false;
   return /[A-ZÁÉÍÓÚÃÕÂÊÔ]/.test(text.toUpperCase());
+}
+
+function teamFromTotalLabel(value) {
+  const folded = fold(value);
+  if (folded === "TOTAL") return null;
+  if (!folded.startsWith("TOTAL")) return undefined;
+  return canonicalTeam(folded.replace(/^TOTAL\s+/, "")) || null;
 }
 
 function blankName(value) {
@@ -144,33 +146,53 @@ function parseConsolidated(sheet, rows, warnings, filename) {
   const parameters = [];
   let sectionTeam = null;
   let inTeam = false;
-  for (let i = 0; i < rows.length; i += 1) {
-    const map = headerMap(rows, i);
-    if (!map) continue;
-    const nameCell = textOf(rows[i][0]);
-    if (fold(nameCell) !== "NOME" && !metricCode(textOf(rows[i][map.ligacoes])) && fold(textOf(rows[i + 1]?.[0])) !== "") {
-      /* header may sit on the slogan row */
+  let stickyMap = {};
+  let i = 0;
+  while (i < rows.length) {
+    const localMap = headerMap(rows, i);
+    if (!localMap) {
+      i += 1;
+      continue;
     }
-    for (let r = i + 1; r < rows.length; r += 1) {
-      if (headerMap(rows, r) && r > i + 1) break;
+    const map = { ...stickyMap, ...localMap };
+    stickyMap = map;
+    let r = i;
+    let consumedHeader = 0;
+    while (r < rows.length && consumedHeader < 2 && headerMap(rows, r) && !isPersonName(textOf(rows[r][0])) && !fold(textOf(rows[r][0])).startsWith("TOTAL")) {
+      const headerTeam = canonicalTeam(textOf(rows[r][0]));
+      if (headerTeam) {
+        sectionTeam = headerTeam;
+        inTeam = true;
+      }
+      r += 1;
+      consumedHeader += 1;
+    }
+    for (; r < rows.length; r += 1) {
+      if (headerMap(rows, r)) break;
       const row = rows[r];
       const rawName = textOf(row[0]);
       const teamName = canonicalTeam(rawName);
-      const metricSample = map.ligacoes != null ? textOf(row[map.ligacoes]) : "";
-      if (teamName && !metricSample) {
+      if (teamName && !(map.ligacoes != null && textOf(row[map.ligacoes]))) {
         sectionTeam = teamName;
         inTeam = true;
         continue;
       }
-      if (blankName(rawName)) continue;
+      if (blankName(rawName) || isStructuralLabel(rawName)) {
+        if (!fold(rawName).startsWith("TOTAL")) continue;
+      }
       const folded = fold(rawName);
       if (folded.startsWith("TOTAL")) {
-        const grain = folded === "TOTAL" ? "consolidado_total" : "consolidado_equipe_total";
+        const namedTeam = teamFromTotalLabel(rawName);
+        const geral = folded === "TOTAL";
         pushMetrics(facts, row, map, {
-          cycleName: cycle.name, person: null, team: grain === "consolidado_total" ? null : sectionTeam,
-          grain, period: cycle.startsOn, sheet, warnings, filename
+          cycleName: cycle.name,
+          person: null,
+          team: geral ? null : (namedTeam || sectionTeam),
+          grain: geral ? "consolidado_total" : "consolidado_equipe_total",
+          period: cycle.startsOn,
+          sheet, warnings, filename
         });
-        if (folded === "TOTAL") inTeam = false;
+        if (geral) inTeam = false;
         continue;
       }
       if (!isPersonName(rawName)) continue;
@@ -183,6 +205,7 @@ function parseConsolidated(sheet, rows, warnings, filename) {
         sheet, warnings, filename
       });
     }
+    i = Math.max(r, i + 1);
   }
   collectTemplates(rows, templates, parameters, cycle.name, sheet);
   return { cycle, facts, templates, parameters, teams: [...new Set(facts.map((item) => item.team).filter(Boolean))] };
@@ -335,9 +358,7 @@ function parseTeamSheet(sheet, rows, warnings, filename) {
 }
 
 function parseWeek(sheet, rows, warnings, filename, cycles) {
-  const parts = weekParts(sheet);
   const facts = [];
-  const dayNames = ["SEGUNDA", "TERCA", "QUARTA", "QUINTA", "SEXTA", "SABADO", "DOMINGO"];
   for (let i = 0; i < rows.length; i += 1) {
     const map = headerMap(rows, i);
     if (!map) continue;
@@ -360,27 +381,19 @@ function parseWeek(sheet, rows, warnings, filename, cycles) {
       });
     }
   }
-  const sample = facts.find((item) => item.period)?.period;
-  let year = sample ? Number(sample.slice(0, 4)) : null;
-  if (!year && parts) {
-    const candidates = [2025, 2026, 2027];
-    year = candidates.find((item) => cycles.some((cycle) => {
-      if (!cycle.startsOn || !cycle.endsOn) return false;
-      const probe = isoDate(item, parts.startMonth, parts.startDay);
-      return probe >= cycle.startsOn && probe <= cycle.endsOn;
-    })) || 2026;
-  }
-  const startsOn = parts && year ? isoDate(year, parts.startMonth, parts.startDay) : sample;
-  let endsYear = year;
-  if (parts && parts.endMonth < parts.startMonth) endsYear = year + 1;
-  const endsOn = parts && year ? isoDate(endsYear, parts.endMonth, parts.endDay) : startsOn;
-  const cycle = cycles.find((item) => startsOn && item.startsOn && startsOn >= item.startsOn && startsOn <= item.endsOn);
   facts.forEach((fact) => {
+    const cycle = cycles.find((item) => fact.period && item.startsOn && item.endsOn && fact.period >= item.startsOn && fact.period <= item.endsOn);
     fact.cycleName = cycle?.name || null;
     fact.weekSheet = sheet;
-    if (!fact.period && startsOn) fact.period = startsOn;
   });
-  return { sheet, startsOn, endsOn, cycleName: cycle?.name || null, facts: facts.filter((item) => item.cycleName) };
+  const dated = facts.filter((item) => item.period && item.cycleName);
+  return {
+    sheet,
+    startsOn: dated[0]?.period || null,
+    endsOn: dated.at(-1)?.period || null,
+    cycleName: dated[0]?.cycleName || null,
+    facts: dated
+  };
 }
 
 function parseWorkbook(buffer, filename) {
@@ -404,7 +417,11 @@ function parseWorkbook(buffer, filename) {
       weekSheets.push({ name, rows });
       continue;
     }
-    if (kind === "consolidated" || kind === "accumulated") {
+    if (kind === "accumulated") {
+      warnings.push({ level: "warning", sheet: name, cell: null, message: "Aba acumulada não entra nos indicadores do ciclo." });
+      continue;
+    }
+    if (kind === "consolidated") {
       const parsed = parseConsolidated(name, rows, warnings, filename);
       if (parsed.cycle.month) cycles.push(parsed.cycle);
       facts.push(...parsed.facts);
@@ -440,7 +457,7 @@ function parseWorkbook(buffer, filename) {
     filename,
     sheets,
     cycles: uniqueCycles,
-    facts,
+    facts: dedupeFacts(facts),
     goals,
     funnel,
     parameters: dedupeParameters(parameters),
@@ -479,6 +496,42 @@ function dedupeParameters(items) {
   return [...map.values()];
 }
 
+const OFFICIAL_SOURCES = {
+  consolidado_total: "Linha TOTAL do ADP GERAL do ciclo. Não somar com os totais das equipes nem com o histórico diário.",
+  consolidado_equipe_total: "Linha TOTAL <equipe> do ADP GERAL do ciclo. A aba da equipe não repete esse volume; ela traz meta, funil e realizado individual.",
+  consolidado: "Pessoas do bloco superior do ADP GERAL, antes das seções de equipe.",
+  consolidado_equipe: "Pessoas dentro da seção da equipe no ADP GERAL. Detalhe, não é somado ao total da equipe.",
+  diario: "Abas semanais, apenas a data que cai dentro do ciclo."
+};
+
+function dedupeFacts(facts) {
+  const map = new Map();
+  for (const fact of facts) {
+    const key = [fact.cycleName, fact.person || "", fact.team || "", fact.metric, fact.grain, fact.period || ""].join("|");
+    if (!map.has(key)) map.set(key, fact);
+  }
+  return [...map.values()];
+}
+
+function teamTotals(parsed, year = 2026, month = 10) {
+  const cycle = parsed.cycles.find((item) => item.year === year && item.month === month);
+  if (!cycle) return null;
+  const totals = {};
+  const people = {};
+  for (const fact of parsed.facts) {
+    if (fact.cycleName !== cycle.name) continue;
+    if (fact.grain === "consolidado_equipe_total" && fact.team) {
+      totals[fact.team] = totals[fact.team] || {};
+      if (totals[fact.team][fact.metric] == null) totals[fact.team][fact.metric] = fact.value;
+    }
+    if (fact.grain === "consolidado_equipe" && fact.person && fact.team && fact.metric === "ligacoes") {
+      people[fact.team] = people[fact.team] || [];
+      if (!people[fact.team].includes(fact.person)) people[fact.team].push(fact.person);
+    }
+  }
+  return { cycle, totals, people };
+}
+
 function consolidatedTotals(parsed, year = 2026, month = 10) {
   const cycle = parsed.cycles.find((item) => item.year === year && item.month === month);
   if (!cycle) return null;
@@ -490,4 +543,4 @@ function consolidatedTotals(parsed, year = 2026, month = 10) {
   return { cycle, totals };
 }
 
-module.exports = { parseWorkbook, consolidatedTotals, classify, metricCode, METRIC_ORDER };
+module.exports = { parseWorkbook, consolidatedTotals, teamTotals, classify, metricCode, METRIC_ORDER, OFFICIAL_SOURCES };

@@ -35,7 +35,7 @@ async function importCatalog(client, buffer, filename, userId, { force = false }
     if (existing.rowCount) {
       await client.query(
         `UPDATE ticket_reasons SET catalog_code = $2, title = $3, when_to_use = $4, default_type = $5, default_priority = $6,
-         sla_owner = $7, validation_status = $8, adjustment_note = $9, is_restricted = $10, config_pending = $11, pending_fields = $12
+         sla_owner = $7, validation_status = $8, adjustment_note = $9, is_restricted = $10, config_pending = $11, pending_fields = $12, active = true
          WHERE id = $1`,
         [existing.rows[0].id, reason.code, reason.title, reason.whenToUse, reason.defaultType, reason.defaultPriority, reason.slaOwner, reason.validationStatus, reason.adjustmentNote, reason.isRestricted, reason.configPending, reason.pendingFields]
       );
@@ -66,6 +66,13 @@ async function importCatalog(client, buffer, filename, userId, { force = false }
       `INSERT INTO priority_matrix (impact, urgency, priority_code) VALUES ($1, $2, $3)
        ON CONFLICT (impact, urgency) DO UPDATE SET priority_code = EXCLUDED.priority_code`,
       [cell.impact, cell.urgency, cell.priority]
+    );
+  }
+  const sourceRows = parsed.reasons.map((reason) => reason.sourceRow);
+  if (sourceRows.length) {
+    await client.query(
+      `UPDATE ticket_reasons SET active = false WHERE source_sheet = 'Validação' AND NOT (source_row = ANY($1::int[]))`,
+      [sourceRows]
     );
   }
   await client.query(`DELETE FROM ticket_rules`);

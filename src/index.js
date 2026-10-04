@@ -210,7 +210,7 @@ app.get("/api/admin/overview", requireUser, requireRole("admin"), asyncRoute(asy
     query(`SELECT * FROM teams ORDER BY name`),
     query(`SELECT id, display_name, match_key, reconciliation_status FROM people ORDER BY display_name`),
     query(`SELECT * FROM person_reconciliations WHERE status = 'pending' ORDER BY created_at DESC`),
-    query(`SELECT r.*, a.name AS area_name FROM ticket_reasons r JOIN ticket_areas a ON a.id = r.area_id ORDER BY a.name, r.title`),
+    query(`SELECT r.*, a.name AS area_name FROM ticket_reasons r JOIN ticket_areas a ON a.id = r.area_id WHERE r.active ORDER BY a.name, r.title`),
     query(`SELECT id, name, email, role, person_id, team_id, active FROM users ORDER BY name`),
     query(`SELECT timezone, work_start::text, work_end::text, work_days FROM business_calendar WHERE id = 1`)
   ]);

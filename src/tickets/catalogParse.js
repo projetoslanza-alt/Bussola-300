@@ -21,6 +21,7 @@ function parseCatalog(buffer) {
   const policies = [];
   const matrix = [];
   const rules = [];
+  const audit = [];
   const meta = { declaredTotal: null };
 
   const validation = workbook.Sheets.Validação || workbook.Sheets[workbook.SheetNames[0]];
@@ -32,18 +33,48 @@ function parseCatalog(buffer) {
     if (header < 0 && joined.includes("AREA RESPONSAVEL") && joined.includes("MOTIVO")) header = index;
   });
   if (header >= 0) {
+    let sectionArea = "";
+    let commercialLayout = false;
     for (let i = header + 1; i < table.length; i += 1) {
       const row = table[i] || [];
-      const joined = fold(row.join(" "));
+      const joined = fold(row.map((cell) => cell ?? "").join(" "));
+      if (!joined) continue;
       if (joined.includes("AREA RESPONSAVEL") && joined.includes("MOTIVO")) continue;
-      const area = row[0] ? String(row[0]).trim() : "";
-      const title = row[2] ? String(row[2]).trim() : "";
-      if (!area || !title) continue;
-      if (fold(area).includes("CATALOGO") || fold(area).includes("TOTAL DE")) continue;
-      const reason = {
-        area,
-        code: row[1] ? String(row[1]).trim() : null,
-        title,
+      const areaCell = row[0] ? String(row[0]).trim() : "";
+      const second = row[1] ? String(row[1]).trim() : "";
+      const third = row[2] ? String(row[2]).trim() : "";
+      if (areaCell && fold(second).includes("TIPO DE CHAMADO")) {
+        sectionArea = areaCell;
+        commercialLayout = true;
+        audit.push({ sourceRow: i + 1, area: areaCell, code: null, title: second, imported: false, reason: "Cabeçalho da seção Comercial, não é um motivo." });
+        continue;
+      }
+      if (commercialLayout && !areaCell && second) {
+        pushReason(reasons, audit, {
+          area: sectionArea,
+          code: null,
+          title: second,
+          whenToUse: third || null,
+          defaultType: null,
+          slaText: null,
+          defaultPriority: null,
+          slaOwner: null,
+          validationStatus: null,
+          adjustmentNote: row[3] ? String(row[3]).trim() : null,
+          sourceSheet: "Validação",
+          sourceRow: i + 1
+        });
+        continue;
+      }
+      if (!areaCell || !third) {
+        audit.push({ sourceRow: i + 1, area: areaCell || sectionArea || null, code: second || null, title: third || second || null, imported: false, reason: "Linha sem área e motivo na grade principal." });
+        continue;
+      }
+      if (fold(areaCell).includes("CATALOGO") || fold(areaCell).includes("TOTAL DE")) continue;
+      pushReason(reasons, audit, {
+        area: areaCell,
+        code: second || null,
+        title: third,
         whenToUse: row[3] ? String(row[3]).trim() : null,
         defaultType: row[4] ? String(row[4]).trim() : null,
         slaText: row[5] ? String(row[5]).trim() : null,
@@ -53,17 +84,7 @@ function parseCatalog(buffer) {
         adjustmentNote: row[8] ? String(row[8]).trim() : null,
         sourceSheet: "Validação",
         sourceRow: i + 1
-      };
-      const pending = [];
-      if (!reason.code) pending.push("código");
-      if (!reason.whenToUse) pending.push("quando usar");
-      if (!reason.defaultType) pending.push("tipo");
-      if (!reason.defaultPriority) pending.push("SLA");
-      if (!reason.slaOwner) pending.push("dono do SLA");
-      reason.pendingFields = pending;
-      reason.configPending = pending.length > 0;
-      reason.isRestricted = isRestricted(reason);
-      reasons.push(reason);
+      });
     }
   }
 
@@ -113,7 +134,28 @@ function parseCatalog(buffer) {
     });
   }
 
-  return { reasons, policies, matrix, rules, meta };
+  return { reasons, policies, matrix, rules, meta, audit };
+}
+
+function pushReason(reasons, audit, reason) {
+  const pending = [];
+  if (!reason.code) pending.push("código");
+  if (!reason.whenToUse) pending.push("quando usar");
+  if (!reason.defaultType) pending.push("tipo");
+  if (!reason.defaultPriority) pending.push("SLA");
+  if (!reason.slaOwner) pending.push("dono do SLA");
+  reason.pendingFields = pending;
+  reason.configPending = pending.length > 0;
+  reason.isRestricted = isRestricted(reason);
+  reasons.push(reason);
+  audit.push({
+    sourceRow: reason.sourceRow,
+    area: reason.area,
+    code: reason.code,
+    title: reason.title,
+    imported: true,
+    reason: reason.configPending ? `Importado com configuração pendente (${pending.join(", ")}).` : "Importado."
+  });
 }
 
 function minutesFromText(value) {

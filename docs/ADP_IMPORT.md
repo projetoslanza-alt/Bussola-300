@@ -12,7 +12,19 @@ O parser classifica cada aba pelo título:
 - equipe, quando o nome contém uma equipe conhecida, como MANÍACOS, NEGOCIADORES, ELITE, BOPE, MERCENÁRIOS ou VINGADORES;
 - demais abas ficam como não classificadas e geram aviso se tiverem cabeçalho de métricas.
 
-O ciclo comercial vai do dia 16 do mês anterior ao dia 15 do mês nomeado na aba. Outubro 2026, por exemplo, cobre 16/09/2026 a 15/10/2026. Uma semana entra no ciclo cujo intervalo contém a data inicial.
+O ciclo comercial vai do dia 16 do mês anterior ao dia 15 do mês nomeado na aba. Outubro 2026 cobre 16/09/2026 a 15/10/2026. Cada fato diário entra no ciclo que contém a própria data. Data fora de qualquer ciclo, linha sem data e aba de resultado acumulado não entram no indicador.
+
+## Fonte oficial
+
+Cada indicador tem uma fonte só. Fontes equivalentes não são somadas.
+
+- Consolidado geral: linha `TOTAL` da aba `ADP GERAL` do ciclo, grão `consolidado_total`. Não é a soma das pessoas, nem a aba da equipe, nem a semana, nem o resultado acumulado.
+- Resultado da equipe: linha `TOTAL <equipe>` da mesma aba `ADP GERAL`, grão `consolidado_equipe_total`. O nome da equipe vem do rótulo da linha e do cabeçalho da seção. A aba da equipe não repete esse volume; ela é a fonte de meta, funil e realizado individual.
+- Pessoas do bloco superior: grão `consolidado`, sem equipe. A visão da pessoa usa esse grão e não soma o detalhe da seção.
+- Pessoas dentro da seção: grão `consolidado_equipe`. É detalhe. Não entra de novo no total da equipe.
+- Histórico diário: grão `diario` das abas semanais, só nas datas do ciclo. Não entra no KPI mensal.
+
+Em Outubro 2026 a soma de MANÍACOS, ELITE, NEGOCIADORES e BOPE coincide com o consolidado geral porque cada linha de produção do bloco superior está dentro de uma dessas seções. MERCENÁRIOS e VINGADORES não têm linha `TOTAL` nesse ciclo. A ausência fica explícita; não vira zero.
 
 ## O que é gravado
 
