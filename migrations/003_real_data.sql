@@ -1,6 +1,6 @@
 ALTER TABLE people ADD COLUMN IF NOT EXISTS is_master boolean NOT NULL DEFAULT false;
 ALTER TABLE people ADD COLUMN IF NOT EXISTS admission_date date;
-ALTER TABLE people ADD COLUMN IF NOT EXISTS current_role text;
+ALTER TABLE people ADD COLUMN IF NOT EXISTS current_job_title text;
 ALTER TABLE people ADD COLUMN IF NOT EXISTS current_manager_name text;
 ALTER TABLE people ADD COLUMN IF NOT EXISTS current_manager_id uuid REFERENCES people(id);
 ALTER TABLE people ADD COLUMN IF NOT EXISTS structure_source text;

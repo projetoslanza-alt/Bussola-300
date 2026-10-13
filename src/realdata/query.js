@@ -63,7 +63,7 @@ async function roiView(user, queryParams) {
   const rows = await query(
     `SELECT p.id, p.display_name, m.role_name, m.manager_name, m.admission_date::text, m.gross_revenue, m.commission,
         m.bonus, m.fixed_cost, m.marketing_allocation, m.infrastructure, m.total_invested, m.gross_profit, m.roi,
-        m.roi_percent, m.tenure_text, m.brand_count, m.classification, m.result_amount, p.current_role, p.current_manager_name
+        m.roi_percent, m.tenure_text, m.brand_count, m.classification, m.result_amount, p.current_job_title, p.current_manager_name
      FROM roi_monthly m JOIN people p ON p.id = m.person_id
      ${where}
      ORDER BY m.gross_revenue DESC NULLS LAST, p.display_name`,
@@ -106,15 +106,15 @@ async function peopleList(user, queryParams) {
   assertCommercial(user);
   const latest = await latestPeriod("roi_monthly");
   const rows = await query(
-    `SELECT p.id, p.display_name, p.current_role, p.current_manager_name, p.admission_date::text AS admission_date,
+    `SELECT p.id, p.display_name, p.current_job_title, p.current_manager_name, p.admission_date::text AS admission_date,
         p.structure_source, m.period_month::text AS period, m.tenure_text, m.gross_revenue, m.total_invested,
         m.result_amount, m.roi, m.classification, m.role_name AS period_role, m.manager_name AS period_manager
      FROM people p
      LEFT JOIN roi_monthly m ON m.person_id = p.id AND m.period_month = $1::date
      WHERE p.is_master
-       AND ($2::text IS NULL OR p.display_name ILIKE '%' || $2 || '%' OR p.current_role ILIKE '%' || $2 || '%' OR p.current_manager_name ILIKE '%' || $2 || '%')
+       AND ($2::text IS NULL OR p.display_name ILIKE '%' || $2 || '%' OR p.current_job_title ILIKE '%' || $2 || '%' OR p.current_manager_name ILIKE '%' || $2 || '%')
        AND ($3::text IS NULL OR p.current_manager_name = $3)
-       AND ($4::text IS NULL OR p.current_role = $4)
+       AND ($4::text IS NULL OR p.current_job_title = $4)
      ORDER BY p.display_name`,
     [latest, queryParams.q || null, queryParams.manager || null, queryParams.role || null]
   );
@@ -140,7 +140,7 @@ async function personDetail(user, id) {
     throw error;
   }
   const person = await query(
-    `SELECT id, display_name, current_role, current_manager_name, admission_date::text AS admission_date, structure_source, is_master
+    `SELECT id, display_name, current_job_title, current_manager_name, admission_date::text AS admission_date, structure_source, is_master
      FROM people WHERE id = $1`,
     [id]
   );
@@ -199,7 +199,7 @@ async function salesView(user, queryParams) {
     params.slice(0, 3)
   );
   const ranking = await query(
-    `SELECT p.id, COALESCE(p.display_name, s.raw_name) AS display_name, p.current_role, p.current_manager_name,
+    `SELECT p.id, COALESCE(p.display_name, s.raw_name) AS display_name, p.current_job_title, p.current_manager_name,
         s.total_amount, s.reconciliation_status
      FROM sales_monthly s LEFT JOIN people p ON p.id = s.person_id
      ${where}

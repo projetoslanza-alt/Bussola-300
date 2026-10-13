@@ -32,14 +32,14 @@ async function upsertPerson(client, person) {
     const row = await client.query(
       `UPDATE people
        SET display_name = $2, is_master = true, admission_date = COALESCE($3, admission_date),
-           current_role = COALESCE($4, current_role), structure_source = COALESCE(structure_source, 'roi')
+           current_job_title = COALESCE($4, current_job_title), structure_source = COALESCE(structure_source, 'roi')
        WHERE id = $1 RETURNING id`,
       [existing.rows[0].id, person.displayName, person.latest.admissionDate, person.latest.role]
     );
     return { id: row.rows[0].id, created: !existing.rows[0].is_master && false, updated: true, wasMaster: existing.rows[0].is_master };
   }
   const inserted = await client.query(
-    `INSERT INTO people (display_name, match_key, reconciliation_status, is_master, admission_date, current_role, structure_source)
+    `INSERT INTO people (display_name, match_key, reconciliation_status, is_master, admission_date, current_job_title, structure_source)
      VALUES ($1, $2, 'confirmed', true, $3, $4, 'roi') RETURNING id`,
     [person.displayName, person.key, person.latest.admissionDate, person.latest.role]
   );
@@ -137,7 +137,7 @@ async function importRealData(client, sources, userId) {
     const managerId = row.managerKey ? ids.get(row.managerKey) || null : null;
     await client.query(
       `UPDATE people
-       SET current_role = COALESCE($2, current_role), current_manager_name = $3, current_manager_id = $4, structure_source = 'equipe'
+       SET current_job_title = COALESCE($2, current_job_title), current_manager_name = $3, current_manager_id = $4, structure_source = 'equipe'
        WHERE id = $1`,
       [personId, row.role, row.managerName, managerId]
     );

@@ -406,7 +406,7 @@
         root.innerHTML = `<div class="empty">${esc(data.message || "Nenhum colaborador encontrado na base do ROI.")}</div>`;
         return;
       }
-      const cards = data.people.map((person) => `<div class="card people-card"><div class="avatar">${esc(person.display_name.slice(0, 1))}</div><div class="grow"><strong>${esc(person.display_name)}</strong><small>${esc(person.current_role || "Cargo não informado")} · ${esc(person.current_manager_name || "Sem gestor atual")}</small><small>ROI ${roiText(person.roi)} · ${esc(person.classification || "Sem classificação")}</small></div><button class="btn btn-ghost" data-person="${person.id}" type="button">Ver perfil</button></div>`).join("");
+      const cards = data.people.map((person) => `<div class="card people-card"><div class="avatar">${esc(person.display_name.slice(0, 1))}</div><div class="grow"><strong>${esc(person.display_name)}</strong><small>${esc(person.current_job_title || "Cargo não informado")} · ${esc(person.current_manager_name || "Sem gestor atual")}</small><small>ROI ${roiText(person.roi)} · ${esc(person.classification || "Sem classificação")}</small></div><button class="btn btn-ghost" data-person="${person.id}" type="button">Ver perfil</button></div>`).join("");
       root.innerHTML = `
         <div class="grid grid-4">
           <div class="card"><span class="kicker">Colaboradores ROI</span><div class="stat-value">${num(data.total)}</div><span class="stat-meta">Último período disponível: ${esc(data.periodLabel || "—")}</span></div>
@@ -439,7 +439,7 @@
       const history = data.history.map((row) => `<tr><td>${esc(row.label)}</td><td>${esc(row.role_name || "—")}</td><td>${esc(row.manager_name || "—")}</td><td>${money(row.gross_revenue)}</td><td>${money(row.total_invested)}</td><td>${money(row.result_amount)}</td><td>${roiText(row.roi)}</td><td>${esc(row.classification || "—")}</td></tr>`).join("");
       panel.innerHTML = box("Perfil", `
         <h2>${esc(person.display_name)}</h2>
-        <p>Cargo atual: ${esc(person.current_role || "Não informado")} · Gestor atual: ${esc(person.current_manager_name || "Não informado")}</p>
+        <p>Cargo atual: ${esc(person.current_job_title || "Não informado")} · Gestor atual: ${esc(person.current_manager_name || "Não informado")}</p>
         <p>Admissão: ${dateBr(person.admission_date)} · Origem do cargo/gestor atual: ${esc(person.structure_source || "—")}</p>
         <div class="grid grid-3">
           <div class="card"><span class="kicker">Trilhas</span><p>${esc(data.unavailable.trilhas)}</p></div>
