@@ -88,8 +88,10 @@ test.after(async () => {
 });
 
 test("sem sessão a API recusa acesso", async () => {
-  const response = await fetch(`${base}/api/adp/dashboard`);
-  assert.equal(response.status, 401);
+  for (const route of ["/api/adp/dashboard", "/api/people", "/api/roi", "/api/roi/summary", "/api/sales", "/api/sales/summary", "/api/home"]) {
+    const response = await fetch(`${base}${route}`);
+    assert.equal(response.status, 401, route);
+  }
 });
 
 test("health responde com banco", async () => {

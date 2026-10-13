@@ -27,7 +27,17 @@ npm run seed
 npm start
 ```
 
-O seed importa `ADP BH SCALE_2026.xlsx` e `catalogo_chamados_300.xlsx`. A senha do administrador inicial vem de `ADMIN_PASSWORD` no `.env`. Ela não é gravada no código.
+O seed importa `ADP BH SCALE_2026.xlsx` e `catalogo_chamados_300.xlsx` quando o banco ainda não tem carga. A senha do administrador inicial vem de `ADMIN_PASSWORD` no `.env`. Ela não é gravada no código.
+
+## Dados reais de ROI, vendas e chamados
+
+O comando abaixo não importa ADP. As planilhas ficam fora do Git, em `REAL_DATA_DIR`, em `imports/` ou na raiz do projeto.
+
+```powershell
+npm run import:real-data
+```
+
+Ele lê ROI, Equipe Comercial, Controle de Vendas e o catálogo de chamados. A base de colaboradores é a do ROI. Nomes da Equipe ou de Vendas sem correspondência no ROI viram pendência e não criam pessoa.
 
 ## Variáveis
 

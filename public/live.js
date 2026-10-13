@@ -1,6 +1,20 @@
 (() => {
   const state = { user: null, adp: null, ticketCatalog: null, wizard: null, ticket: null };
 
+  function money(value) {
+    if (value == null || value === "") return "—";
+    return Number(value).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  }
+  function roiText(value) {
+    if (value == null || value === "") return "—";
+    return `${Number(value).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}x`;
+  }
+  function dateBr(value) {
+    if (!value) return "—";
+    const [year, month, day] = String(value).slice(0, 10).split("-");
+    if (!day) return "—";
+    return `${day}/${month}/${year}`;
+  }
   function num(value) {
     if (value == null || Number.isNaN(Number(value))) return "—";
     return Number(value).toLocaleString("pt-BR", { maximumFractionDigits: 1 });
@@ -89,21 +103,22 @@
     const home = document.querySelector("#page-inicio .stats");
     if (home) {
       home.innerHTML = `
-        <div class="card"><span class="kicker">Ciclo ADP</span><div class="stat-value" id="home-cycle">…</div><div class="stat-meta" id="home-adp">Carregando indicadores</div></div>
-        <div class="card"><span class="kicker">Vendas do ciclo</span><div class="stat-value" id="home-sales">…</div><div class="stat-meta">valor importado da planilha</div></div>
-        <div class="card"><span class="kicker">Chamados</span><div class="stat-value" id="home-tickets">…</div><div class="stat-meta" id="home-critical">em aberto</div></div>
-        <div class="card"><span class="kicker">Atribuição</span><div class="stat-value" id="home-queue">…</div><div class="stat-meta">aguardando responsável</div></div>`;
+        <div class="card"><span class="kicker">Último período</span><div class="stat-value" id="home-period">…</div><div class="stat-meta" id="home-people">Carregando indicadores</div></div>
+        <div class="card"><span class="kicker">Receita realizada</span><div class="stat-value" id="home-revenue">…</div><div class="stat-meta" id="home-sales">vendas do período</div></div>
+        <div class="card"><span class="kicker">ROI médio</span><div class="stat-value" id="home-roi">…</div><div class="stat-meta">valor importado da planilha</div></div>
+        <div class="card"><span class="kicker">Chamados</span><div class="stat-value" id="home-tickets">…</div><div class="stat-meta" id="home-critical">em aberto</div></div>`;
     }
   }
 
   async function loadHome() {
     const data = await api("/api/home");
-    document.getElementById("home-cycle").textContent = data.ciclo || "—";
-    document.getElementById("home-adp").textContent = data.ligacoes == null ? "Sem base importada" : `${num(data.ligacoes)} ligações no recorte`;
-    document.getElementById("home-sales").textContent = num(data.vendas);
+    document.getElementById("home-period").textContent = data.ultimoPeriodo || "Sem dados";
+    document.getElementById("home-people").textContent = data.comercial ? `${num(data.colaboradores)} colaboradores na base ROI` : "Indicadores comerciais restritos ao seu perfil";
+    document.getElementById("home-revenue").textContent = data.comercial ? money(data.receita) : "—";
+    document.getElementById("home-sales").textContent = data.comercial ? `${num(data.vendas)} vendas no período` : "Sem permissão para receita";
+    document.getElementById("home-roi").textContent = data.comercial ? roiText(data.roiMedio) : "—";
     document.getElementById("home-tickets").textContent = num(data.chamadosAbertos);
-    document.getElementById("home-critical").textContent = `${num(data.chamadosCriticos)} críticos`;
-    document.getElementById("home-queue").textContent = num(data.aguardandoAtribuicao);
+    document.getElementById("home-critical").textContent = `${num(data.chamadosCriticos)} críticos · ${num(data.aguardandoAtribuicao)} aguardando atribuição`;
   }
 
   async function loadAdp() {
@@ -349,14 +364,208 @@
     const root = document.getElementById("reports-live");
     if (!root) return;
     try {
-      const adp = await api("/api/reports/adp");
       const tickets = await api("/api/reports/tickets");
-      root.innerHTML = `<div class="grid grid-2">
-        ${box("ADP Comercial", `<p>${esc(adp.cycle?.name || "Sem ciclo")}</p><p>Ligações ${num(adp.totals?.ligacoes)} · Vendas ${num(adp.totals?.vendas)}</p>`)}
-        ${box("Gerencial de Chamados", `<p>Backlog ${num(tickets.kpis.backlog)} · Críticos ${num(tickets.kpis.criticos)} · Reabertos ${num(tickets.kpis.reabertos)}</p><p>Motivos com volume: ${esc((tickets.byReason || []).slice(0, 3).map((item) => `${item.name || "restrito"} (${item.count})`).join(", ") || "sem dados")}</p>`)}
-      </div>`;
+      let commercial = "";
+      try {
+        const roi = await api("/api/roi/summary");
+        const sales = await api("/api/sales/summary");
+        commercial = `<div class="grid grid-2">
+          ${box("ROI", roi.empty ? `<p>Sem dados disponíveis</p>` : `<p>Último período disponível: ${esc(roi.periodLabel)}</p><p>Receita ${money(roi.kpis.gross_revenue)} · ROI médio ${roiText(roi.kpis.avg_roi)} · ${num(roi.kpis.collaborators)} colaboradores</p>`)}
+          ${box("Vendas realizadas", sales.empty ? `<p>Sem dados disponíveis</p>` : `<p>Último período disponível: ${esc(sales.periodLabel)}</p><p>Receita ${money(sales.kpis.revenue)} · ${num(sales.kpis.transactions)} vendas</p><p>${esc(sales.note)}</p>`)}
+        </div>`;
+      } catch (error) {
+        commercial = box("ROI e vendas", `<p>${esc(error.message)}</p>`);
+      }
+      root.innerHTML = `${commercial}
+        <div class="grid grid-2" style="margin-top:16px">
+          ${box("Gerencial de Chamados", `<p>Backlog ${num(tickets.kpis.backlog)} · Críticos ${num(tickets.kpis.criticos)} · Aguardando atribuição ${num(tickets.kpis.aguardandoAtribuicao)}</p>`)}
+          ${box("Módulos sem fonte", `<p>Treinamentos, gamificação, universidade, recrutamento, documentos e news estão aguardando dados.</p>`)}
+        </div>`;
     } catch (error) {
       root.innerHTML = box("Relatórios", `<p class="live-error">${esc(error.message)}</p>`);
+    }
+  }
+
+  function options(items, selected, placeholder) {
+    const list = [`<option value="">${esc(placeholder)}</option>`];
+    for (const item of items) {
+      const value = item.id || item.value || item;
+      const label = item.display_name || item.label || item;
+      list.push(`<option value="${esc(value)}" ${value === selected ? "selected" : ""}>${esc(label)}</option>`);
+    }
+    return list.join("");
+  }
+
+  async function loadPeople() {
+    const root = document.getElementById("people-root");
+    if (!root) return;
+    root.innerHTML = box("", "<p>Carregando colaboradores…</p>");
+    try {
+      const data = await api("/api/people");
+      if (data.empty) {
+        root.innerHTML = `<div class="empty">${esc(data.message || "Nenhum colaborador encontrado na base do ROI.")}</div>`;
+        return;
+      }
+      const cards = data.people.map((person) => `<div class="card people-card"><div class="avatar">${esc(person.display_name.slice(0, 1))}</div><div class="grow"><strong>${esc(person.display_name)}</strong><small>${esc(person.current_role || "Cargo não informado")} · ${esc(person.current_manager_name || "Sem gestor atual")}</small><small>ROI ${roiText(person.roi)} · ${esc(person.classification || "Sem classificação")}</small></div><button class="btn btn-ghost" data-person="${person.id}" type="button">Ver perfil</button></div>`).join("");
+      root.innerHTML = `
+        <div class="grid grid-4">
+          <div class="card"><span class="kicker">Colaboradores ROI</span><div class="stat-value">${num(data.total)}</div><span class="stat-meta">Último período disponível: ${esc(data.periodLabel || "—")}</span></div>
+          <div class="card"><span class="kicker">Trilhas</span><div class="stat-value">—</div><span class="stat-meta">Sem registros.</span></div>
+          <div class="card"><span class="kicker">Treinamentos</span><div class="stat-value">—</div><span class="stat-meta">Sem registros.</span></div>
+          <div class="card"><span class="kicker">1:1 e PDI</span><div class="stat-value">—</div><span class="stat-meta">Sem registros.</span></div>
+        </div>
+        <div class="section-head"><div><h2>Colaboradores</h2><p>Base-mestra importada do ROI. Cargo e gestor atuais vêm da Equipe Comercial quando houver correspondência.</p></div><input class="search" id="people-filter" placeholder="Buscar pessoa, cargo ou gestor"></div>
+        <div class="grid grid-3" id="people-grid">${cards}</div>
+        <div id="people-detail"></div>`;
+      const filter = root.querySelector("#people-filter");
+      filter.oninput = () => {
+        const term = filter.value.toLowerCase();
+        root.querySelectorAll(".people-card").forEach((card) => {
+          card.style.display = card.textContent.toLowerCase().includes(term) ? "" : "none";
+        });
+      };
+      root.querySelectorAll("[data-person]").forEach((button) => button.onclick = () => loadPerson(button.dataset.person));
+    } catch (error) {
+      root.innerHTML = box("Gestão de pessoas", `<p class="live-error">${esc(error.message)}</p>`);
+    }
+  }
+
+  async function loadPerson(id) {
+    const panel = document.getElementById("people-detail");
+    panel.innerHTML = box("", "<p>Carregando perfil…</p>");
+    try {
+      const data = await api(`/api/people/${id}`);
+      const person = data.person;
+      const history = data.history.map((row) => `<tr><td>${esc(row.label)}</td><td>${esc(row.role_name || "—")}</td><td>${esc(row.manager_name || "—")}</td><td>${money(row.gross_revenue)}</td><td>${money(row.total_invested)}</td><td>${money(row.result_amount)}</td><td>${roiText(row.roi)}</td><td>${esc(row.classification || "—")}</td></tr>`).join("");
+      panel.innerHTML = box("Perfil", `
+        <h2>${esc(person.display_name)}</h2>
+        <p>Cargo atual: ${esc(person.current_role || "Não informado")} · Gestor atual: ${esc(person.current_manager_name || "Não informado")}</p>
+        <p>Admissão: ${dateBr(person.admission_date)} · Origem do cargo/gestor atual: ${esc(person.structure_source || "—")}</p>
+        <div class="grid grid-3">
+          <div class="card"><span class="kicker">Trilhas</span><p>${esc(data.unavailable.trilhas)}</p></div>
+          <div class="card"><span class="kicker">Treinamentos</span><p>${esc(data.unavailable.treinamentos)}</p></div>
+          <div class="card"><span class="kicker">Compliance, 1:1 e PDI</span><p>${esc(data.unavailable.compliance)} ${esc(data.unavailable.oneOnOne)} ${esc(data.unavailable.pdi)}</p></div>
+        </div>
+        <h3>Histórico de ROI</h3>
+        <div class="table-wrap"><table><tr><th>Período</th><th>Cargo no mês</th><th>Gestor no mês</th><th>Receita</th><th>Investido</th><th>Resultado</th><th>ROI</th><th>Classificação</th></tr>${history || "<tr><td colspan='8'>Sem dados disponíveis</td></tr>"}</table></div>`);
+    } catch (error) {
+      panel.innerHTML = box("Perfil", `<p class="live-error">${esc(error.message)}</p>`);
+    }
+  }
+
+  async function loadFinance() {
+    const root = document.getElementById("finance-root");
+    if (!root) return;
+    const current = new URLSearchParams(root.dataset.query || "");
+    root.innerHTML = box("", "<p>Carregando ROI…</p>");
+    try {
+      const data = await api(`/api/roi/summary?${current.toString()}`);
+      if (!data.period) {
+        root.innerHTML = `<div class="empty">Sem dados disponíveis</div>`;
+        return;
+      }
+      const k = data.kpis;
+      const rows = data.rows.map((row) => `<tr><td>${esc(row.display_name)}</td><td>${esc(row.role_name || "—")}</td><td>${esc(row.manager_name || "—")}</td><td>${money(row.gross_revenue)}</td><td>${money(row.total_invested)}</td><td>${money(row.result_amount)}</td><td>${roiText(row.roi)}</td><td>${esc(row.classification || "—")}</td></tr>`).join("");
+      const managers = data.byManager.map((row) => `<tr><td>${esc(row.manager_name)}</td><td>${num(row.collaborators)}</td><td>${money(row.gross_revenue)}</td><td>${money(row.total_invested)}</td><td>${money(row.result_amount)}</td><td>${roiText(row.avg_roi)}</td></tr>`).join("");
+      const history = data.history.map((row) => `<tr><td>${esc(row.label)}</td><td>${money(row.gross_revenue)}</td><td>${money(row.result_amount)}</td><td>${roiText(row.avg_roi)}</td><td>${num(row.collaborators)}</td></tr>`).join("");
+      root.innerHTML = `
+        <p>Último período disponível: ${esc(data.periods.at(-1)?.label || data.periodLabel)}. Valores importados da planilha, sem recálculo. Gestor e cargo são os registrados naquele mês.</p>
+        <div class="filters">
+          <select id="roi-period">${options(data.periods, data.period, "Período")}</select>
+          <select id="roi-manager">${options(data.filters.managers, current.get("manager"), "Todos os gestores")}</select>
+          <select id="roi-role">${options(data.filters.roles, current.get("role"), "Todos os cargos")}</select>
+          <select id="roi-person">${options(data.filters.people, current.get("personId"), "Todos os colaboradores")}</select>
+        </div>
+        <div class="grid grid-4">
+          <div class="card"><span class="kicker">Receita bruta</span><div class="stat-value">${money(k.gross_revenue)}</div></div>
+          <div class="card"><span class="kicker">Total investido</span><div class="stat-value">${money(k.total_invested)}</div></div>
+          <div class="card"><span class="kicker">Resultado</span><div class="stat-value">${money(k.result_amount)}</div></div>
+          <div class="card"><span class="kicker">ROI médio</span><div class="stat-value">${roiText(k.avg_roi)}</div><span class="stat-meta">${num(k.positive_roi)} com ROI positivo · ${num(k.without_revenue)} sem receita</span></div>
+        </div>
+        <div class="grid grid-4" style="margin-top:16px">
+          <div class="card"><span class="kicker">Comissão</span><div class="stat-value">${money(k.commission)}</div></div>
+          <div class="card"><span class="kicker">Premiação</span><div class="stat-value">${money(k.bonus)}</div></div>
+          <div class="card"><span class="kicker">Infraestrutura</span><div class="stat-value">${money(k.infrastructure)}</div></div>
+          <div class="card"><span class="kicker">Colaboradores</span><div class="stat-value">${num(k.collaborators)}</div></div>
+        </div>
+        <div class="section-head"><div><h2>ROI por colaborador</h2></div></div>
+        <div class="card table-wrap"><table><tr><th>Colaborador</th><th>Cargo</th><th>Gestor do mês</th><th>Receita</th><th>Investido</th><th>Resultado</th><th>ROI</th><th>Classificação</th></tr>${rows || "<tr><td colspan='8'>Nenhum registro encontrado</td></tr>"}</table></div>
+        <div class="section-head"><div><h2>ROI por gestor</h2></div></div>
+        <div class="card table-wrap"><table><tr><th>Gestor</th><th>Colaboradores</th><th>Receita</th><th>Investido</th><th>Resultado</th><th>ROI médio</th></tr>${managers}</table></div>
+        <div class="section-head"><div><h2>Histórico mensal</h2></div></div>
+        <div class="card table-wrap"><table><tr><th>Período</th><th>Receita</th><th>Resultado</th><th>ROI médio</th><th>Colaboradores</th></tr>${history}</table></div>`;
+      const apply = () => {
+        const params = new URLSearchParams();
+        const period = root.querySelector("#roi-period").value;
+        const manager = root.querySelector("#roi-manager").value;
+        const role = root.querySelector("#roi-role").value;
+        const person = root.querySelector("#roi-person").value;
+        if (period) params.set("period", period);
+        if (manager) params.set("manager", manager);
+        if (role) params.set("role", role);
+        if (person) params.set("personId", person);
+        root.dataset.query = params.toString();
+        loadFinance();
+      };
+      ["#roi-period", "#roi-manager", "#roi-role", "#roi-person"].forEach((selector) => root.querySelector(selector).onchange = apply);
+    } catch (error) {
+      root.innerHTML = box("Financeiro", `<p class="live-error">${esc(error.message)}</p>`);
+    }
+  }
+
+  async function loadSales() {
+    const root = document.getElementById("sales-root");
+    if (!root) return;
+    const current = new URLSearchParams(root.dataset.query || "");
+    root.innerHTML = box("", "<p>Carregando resultados…</p>");
+    try {
+      const data = await api(`/api/sales/summary?${current.toString()}`);
+      if (!data.period) {
+        root.innerHTML = `<div class="empty">Sem dados disponíveis</div>`;
+        return;
+      }
+      const ranking = data.ranking.map((row, index) => `<tr><td>${index + 1}</td><td>${esc(row.display_name)}</td><td>${esc(row.current_manager_name || "—")}</td><td>${money(row.total_amount)}</td><td>${esc(row.reconciliation_status === "matched" ? "ROI" : "Não conciliado")}</td></tr>`).join("");
+      const brands = data.byBrand.map((row) => `<tr><td>${esc(row.brand)}</td><td>${money(row.amount)}</td></tr>`).join("");
+      const evolution = data.evolution.map((row) => `<tr><td>${esc(row.label)}</td><td>${money(row.revenue)}</td><td>${num(row.collaborators_with_revenue)}</td></tr>`).join("");
+      const managers = data.byManager.map((row) => `<tr><td>${esc(row.manager_name)}</td><td>${money(row.revenue)}</td><td>${num(row.collaborators_with_revenue)}</td></tr>`).join("");
+      const detail = data.transactions.slice(0, 80).map((row) => `<tr><td>${esc(row.display_name)}</td><td>${esc(row.franchise || "—")}</td><td>${esc(row.franchisee || "—")}</td><td>${money(row.revenue)}</td><td>${row.signal_value == null ? "—" : money(row.signal_value)}</td><td>${dateBr(row.signal_date)}</td><td>${row.closing_value == null ? "—" : money(row.closing_value)}</td><td>${dateBr(row.closing_date)}</td></tr>`).join("");
+      root.innerHTML = `
+        <p>Último período disponível: ${esc(data.periods.at(-1)?.label || data.periodLabel)}. ${esc(data.note)}</p>
+        <div class="filters">
+          <select id="sales-period">${options(data.periods, data.period, "Período")}</select>
+          <select id="sales-manager">${options(data.filters.managers, current.get("manager"), "Todos os gestores atuais")}</select>
+          <select id="sales-person">${options(data.filters.people, current.get("personId"), "Todos os colaboradores")}</select>
+        </div>
+        <div class="grid grid-4">
+          <div class="card"><span class="kicker">Receita realizada</span><div class="stat-value">${money(data.kpis.revenue)}</div></div>
+          <div class="card"><span class="kicker">Vendas</span><div class="stat-value">${num(data.kpis.transactions)}</div><span class="stat-meta">transações do período</span></div>
+          <div class="card"><span class="kicker">Com receita</span><div class="stat-value">${num(data.kpis.collaborators_with_revenue)}</div></div>
+          <div class="card"><span class="kicker">Meta</span><div class="stat-value">—</div><span class="stat-meta">Ainda não configurado</span></div>
+        </div>
+        <div class="section-head"><div><h2>Ranking por receita</h2></div></div>
+        <div class="card table-wrap"><table><tr><th>#</th><th>Colaborador</th><th>Gestor atual</th><th>Receita</th><th>Conciliação</th></tr>${ranking || "<tr><td colspan='5'>Nenhum registro encontrado</td></tr>"}</table></div>
+        <div class="grid grid-2" style="margin-top:16px">
+          ${box("Receita por marca", `<table><tr><th>Marca</th><th>Receita</th></tr>${brands || "<tr><td colspan='2'>Sem dados disponíveis</td></tr>"}</table>`)}
+          ${box("Por gestor atual", `<table><tr><th>Gestor</th><th>Receita</th><th>Com receita</th></tr>${managers}</table>`)}
+        </div>
+        <div class="section-head"><div><h2>Evolução mensal</h2></div></div>
+        <div class="card table-wrap"><table><tr><th>Período</th><th>Receita</th><th>Colaboradores com receita</th></tr>${evolution}</table></div>
+        <div class="section-head"><div><h2>Vendas detalhadas</h2></div></div>
+        <div class="card table-wrap"><table><tr><th>Colaborador</th><th>Franquia</th><th>Franqueado</th><th>Receita</th><th>Sinal</th><th>Data do sinal</th><th>Finalização</th><th>Data da finalização</th></tr>${detail || "<tr><td colspan='8'>Nenhum registro encontrado</td></tr>"}</table></div>`;
+      const apply = () => {
+        const params = new URLSearchParams();
+        const period = root.querySelector("#sales-period").value;
+        const manager = root.querySelector("#sales-manager").value;
+        const person = root.querySelector("#sales-person").value;
+        if (period) params.set("period", period);
+        if (manager) params.set("manager", manager);
+        if (person) params.set("personId", person);
+        root.dataset.query = params.toString();
+        loadSales();
+      };
+      ["#sales-period", "#sales-manager", "#sales-person"].forEach((selector) => root.querySelector(selector).onchange = apply);
+    } catch (error) {
+      root.innerHTML = box("Resultados comerciais", `<p class="live-error">${esc(error.message)}</p>`);
     }
   }
 
@@ -406,7 +615,7 @@
 
   async function boot() {
     mountShell();
-    await Promise.allSettled([loadHome(), loadAdp(), loadTickets(), loadReports(), loadAdmin()]);
+    await Promise.allSettled([loadHome(), loadAdp(), loadTickets(), loadReports(), loadAdmin(), loadPeople(), loadFinance(), loadSales()]);
     document.querySelectorAll(".nav-btn").forEach((button) => {
       button.addEventListener("click", () => {
         if (button.dataset.page === "adp") loadAdp();
@@ -414,6 +623,9 @@
         if (button.dataset.page === "relatorios") loadReports();
         if (button.dataset.page === "admin") loadAdmin();
         if (button.dataset.page === "inicio") loadHome();
+        if (button.dataset.page === "pessoas") loadPeople();
+        if (button.dataset.page === "financeiro") loadFinance();
+        if (button.dataset.page === "metas") loadSales();
       });
     });
     const logout = document.createElement("button");

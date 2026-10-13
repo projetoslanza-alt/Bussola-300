@@ -11,6 +11,7 @@ const { migrate } = require("./migrate");
 const { ensureAdmin, login, requireUser, requireRole, COOKIE } = require("./auth");
 const { importAdp } = require("./adp/store");
 const { dashboard, teamsView, personView } = require("./adp/query");
+const realdata = require("./realdata/query");
 const { importCatalog } = require("./tickets/store");
 const tickets = require("./tickets/service");
 const { audit } = require("./audit");
@@ -284,17 +285,35 @@ app.patch("/api/admin/calendar", requireUser, requireRole("admin"), asyncRoute(a
   res.json(row.rows[0]);
 }));
 
+app.get("/api/people", requireUser, asyncRoute(async (req, res) => {
+  res.json(await realdata.peopleList(req.user, req.query));
+}));
+
+app.get("/api/people/:id", requireUser, asyncRoute(async (req, res) => {
+  const detail = await realdata.personDetail(req.user, req.params.id);
+  if (!detail) return res.status(404).json({ error: "Colaborador não encontrado." });
+  res.json(detail);
+}));
+
+app.get("/api/roi/summary", requireUser, asyncRoute(async (req, res) => {
+  res.json(await realdata.roiView(req.user, req.query));
+}));
+
+app.get("/api/roi", requireUser, asyncRoute(async (req, res) => {
+  res.json(await realdata.roiView(req.user, req.query));
+}));
+
+app.get("/api/sales/summary", requireUser, asyncRoute(async (req, res) => {
+  res.json(await realdata.salesView(req.user, req.query));
+}));
+
+app.get("/api/sales", requireUser, asyncRoute(async (req, res) => {
+  res.json(await realdata.salesView(req.user, req.query));
+}));
+
 app.get("/api/home", requireUser, asyncRoute(async (req, res) => {
   const kpis = await tickets.kpis(req.user);
-  const adp = await dashboard({ query }, req.user, {});
-  res.json({
-    chamadosAbertos: kpis.backlog,
-    chamadosCriticos: kpis.criticos,
-    aguardandoAtribuicao: kpis.aguardandoAtribuicao,
-    ciclo: adp.cycle?.name || null,
-    vendas: adp.totals?.vendas ?? null,
-    ligacoes: adp.totals?.ligacoes ?? null
-  });
+  res.json(await realdata.homeView(req.user, kpis));
 }));
 
 const root = path.join(__dirname, "..");

@@ -1,5 +1,11 @@
-function fold(value) {
+function stripInvisibles(value) {
   return String(value ?? "")
+    .replace(/\u00a0/g, " ")
+    .replace(/[\u200b\u200c\u200d\u2060\ufeff\u180e]/g, "");
+}
+
+function fold(value) {
+  return stripInvisibles(value)
     .normalize("NFD")
     .replace(/\p{M}/gu, "")
     .replace(/\s+/g, " ")
@@ -8,7 +14,7 @@ function fold(value) {
 }
 
 function cleanName(value) {
-  return String(value ?? "")
+  return stripInvisibles(value)
     .replace(/\([^)]*\)/g, " ")
     .replace(/\s+/g, " ")
     .trim();
@@ -117,6 +123,6 @@ function toNumber(value) {
 }
 
 module.exports = {
-  fold, cleanName, matchKey, canonicalTeam, parseMonthYearFromTitle,
+  fold, cleanName, matchKey, stripInvisibles, canonicalTeam, parseMonthYearFromTitle,
   cycleRange, parseExplicitRange, isoDate, isExcelError, toNumber, TEAM_ALIASES
 };

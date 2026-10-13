@@ -8,6 +8,7 @@
     "start": "node src/index.js",
     "migrate": "node src/migrate.js",
     "seed": "node src/seed.js",
+    "import:real-data": "node scripts/import-real-data.js",
     "test": "node --test"
   },
   "engines": {

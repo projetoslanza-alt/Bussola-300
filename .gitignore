@@ -21,6 +21,8 @@ uploads/
 *.xlsx
 *.xls
 *.csv
+*.dump
+*.bak
 
 # Build / cobertura
 dist/
